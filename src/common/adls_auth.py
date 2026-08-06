@@ -1,11 +1,9 @@
-import os
-
-from dotenv import load_dotenv
-
-load_dotenv()
+from pyspark.dbutils import DBUtils
 
 
 def configure_adls(spark):
+
+    dbutils = DBUtils(spark)
 
     storage_account = "gridflowstoragedev"
 
