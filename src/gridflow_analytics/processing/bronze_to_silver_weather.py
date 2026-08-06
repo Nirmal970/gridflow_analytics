@@ -1,7 +1,7 @@
 from pyspark.sql.functions import col, current_timestamp
 
-from src.common.spark_session import get_spark_session
-from src.common.adls_auth import configure_adls
+from gridflow_analytics.common.spark_session import get_spark_session
+from gridflow_analytics.common.adls_auth import configure_adls
 
 
 import os

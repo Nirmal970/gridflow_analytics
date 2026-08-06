@@ -1,5 +1,5 @@
 from pyspark.dbutils import DBUtils
-from src.config.config import STORAGE_ACCOUNT
+from gridflow_analytics.config.config import STORAGE_ACCOUNT
 
 
 def configure_adls(spark):

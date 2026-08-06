@@ -23,3 +23,13 @@ spark-warehouse/
 
 # Logs
 *.log
+
+# Build artifacts
+build/
+dist/
+*.whl
+*.egg-info/
+
+# Python cache
+__pycache__/
+*.py[cod]
