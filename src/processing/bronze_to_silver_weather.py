@@ -3,6 +3,18 @@ from pyspark.sql.functions import col, current_timestamp
 from src.common.spark_session import get_spark_session
 from src.common.adls_auth import configure_adls
 
+
+import os
+import sys
+
+# temporary will remove later
+PROJECT_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
+
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 from src.config.config import (
     BRONZE_CONTAINER,
     BRONZE_WEATHER_PATH,
