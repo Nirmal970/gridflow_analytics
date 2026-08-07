@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
 
-from src.config.config import APP_NAME
+from gridflow_analytics.config.config import APP_NAME
 
 
 def get_spark_session() -> SparkSession:
