@@ -84,7 +84,7 @@ def load(df):
         silver_path = f"abfss://{SILVER_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"f"{SILVER_WEATHER_PATH}"
 
         logger.info(f"Writing Silver data to: {silver_path}")
-        df.write.format("delta").mode("overwrite").save(silver_path)
+        df.write.format("delta").mode("append").save(silver_path)
 
         logger.info("Silver layer written successfully.")
 
