@@ -1,4 +1,5 @@
 from gridflow_analytics.common.logger import logger
+from pyspark.dbutils import DBUtils
 
 
 def configure_adls(spark):
