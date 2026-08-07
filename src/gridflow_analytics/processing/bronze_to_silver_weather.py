@@ -123,9 +123,7 @@ def main(city: str = "hyderabad"):
 
     finally:
 
-        logger.info("Stopping Spark Session.")
-
-        spark.stop()
+        logger.info("Completed Successfully")
 
 
 if __name__ == "__main__":
