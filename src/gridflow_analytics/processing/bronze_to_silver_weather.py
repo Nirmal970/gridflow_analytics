@@ -3,6 +3,7 @@ from pyspark.sql.functions import col, current_timestamp
 from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.logger import logger
+from pyspark.dbutils import DBUtils
 
 from gridflow_analytics.config.config import (
     BRONZE_CONTAINER,
@@ -98,12 +99,13 @@ def load(df):
 def main(city: str = "hyderabad"):
 
     spark = get_spark_session()
+    dbutils = DBUtils(spark)
 
     try:
 
         logger.info("Starting Bronze -> Silver Weather ETL")
 
-        configure_adls(spark)
+        configure_adls(spark,dbutils)
 
         bronze_df = extract(spark, city)
 
