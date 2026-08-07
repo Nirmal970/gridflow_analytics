@@ -1,30 +1,37 @@
-from pyspark.dbutils import DBUtils
-from gridflow_analytics.config.config import STORAGE_ACCOUNT
+from gridflow_analytics.common.logger import logger
 
 
 def configure_adls(spark):
-    storage_account = STORAGE_ACCOUNT
 
-    dbutils = DBUtils(spark)
+    try:
 
-    storage_account = "gridflowstoragedev"
+        storage_account = "gridflowstoragedev"
+        scope = "gridflow-dev-adls"
 
-    scope = "gridflow-dev-adls"
+        logger.info("Reading ADLS credentials from Databricks Secret Scope...")
 
-    tenant_id = dbutils.secrets.get(scope=scope,key="tenant-id")
+        tenant_id = dbutils.secrets.get(scope=scope,key="tenant-id")
 
-    client_id = dbutils.secrets.get(scope=scope,key="client-id")
+        client_id = dbutils.secrets.get(scope=scope,key="client-id")
 
-    client_secret = dbutils.secrets.get(scope=scope,key="client-secret")
+        client_secret = dbutils.secrets.get(scope=scope,key="client-secret")
 
-    spark.conf.set(f"fs.azure.account.auth.type.{storage_account}.dfs.core.windows.net","OAuth")
+        logger.info("Successfully retrieved secrets.")
 
-    spark.conf.set(f"fs.azure.account.oauth.provider.type.{storage_account}.dfs.core.windows.net","org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider")
+        spark.conf.set(f"fs.azure.account.auth.type.{storage_account}.dfs.core.windows.net","OAuth")
 
-    spark.conf.set(f"fs.azure.account.oauth2.client.id.{storage_account}.dfs.core.windows.net",client_id)
+        spark.conf.set(f"fs.azure.account.oauth.provider.type.{storage_account}.dfs.core.windows.net","org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider")
 
-    spark.conf.set(f"fs.azure.account.oauth2.client.secret.{storage_account}.dfs.core.windows.net",client_secret)
+        spark.conf.set(f"fs.azure.account.oauth2.client.id.{storage_account}.dfs.core.windows.net",client_id)
 
-    spark.conf.set(f"fs.azure.account.oauth2.client.endpoint.{storage_account}.dfs.core.windows.net",f"https://login.microsoftonline.com/{tenant_id}/oauth2/token")
+        spark.conf.set(f"fs.azure.account.oauth2.client.secret.{storage_account}.dfs.core.windows.net",client_secret)
 
-    print("ADLS authentication configured successfully.")
+        spark.conf.set(f"fs.azure.account.oauth2.client.endpoint.{storage_account}.dfs.core.windows.net",f"https://login.microsoftonline.com/{tenant_id}/oauth2/token")
+
+        logger.info("ADLS authentication configured successfully.")
+
+    except Exception:
+
+        logger.exception("Failed to configure ADLS authentication.")
+
+        raise
