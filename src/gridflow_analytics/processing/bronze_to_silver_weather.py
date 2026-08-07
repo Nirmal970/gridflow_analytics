@@ -3,19 +3,7 @@ from pyspark.sql.functions import col, current_timestamp
 from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
 
-
-import os
-import sys
-
-# temporary will remove later
-PROJECT_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..")
-)
-
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
-
-from src.config.config import (
+from gridflow_analytics.config.config import (
     BRONZE_CONTAINER,
     BRONZE_WEATHER_PATH,
     SILVER_CONTAINER,
@@ -28,7 +16,7 @@ def extract(spark, city: str):
 
     bronze_path = f"abfss://{BRONZE_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"f"{BRONZE_WEATHER_PATH}/{city}"
 
-    print(f"Reading Bronze Data : {bronze_path}")
+    print(f"Reading Bronze Data: {bronze_path}")
 
     return spark.read.json(bronze_path)
 
@@ -43,7 +31,6 @@ def transform(df):
         col("timezone"),
         col("timezone_abbreviation"),
         col("utc_offset_seconds"),
-
         col("current.time").alias("weather_time"),
         col("current.interval").alias("interval_seconds"),
         col("current.temperature_2m").alias("temperature_c"),
@@ -55,51 +42,45 @@ def transform(df):
         col("current.wind_direction_10m").alias("wind_direction_deg"),
         col("current.surface_pressure").alias("surface_pressure_hpa"),
 
-        current_timestamp().alias("processed_timestamp")
+        current_timestamp().alias("processed_timestamp"),
     )
 
 
 def load(df):
 
-    silver_path = (
-        f"abfss://{SILVER_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"
-        f"{SILVER_WEATHER_PATH}"
-    )
+    silver_path = f"abfss://{SILVER_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"f"{SILVER_WEATHER_PATH}"
 
-    print(f"Writing Silver Data : {silver_path}")
+    print(f"Writing Silver Data: {silver_path}")
 
-    (
-        df.write
-        .format("delta")
-        .mode("overwrite")
-        .save(silver_path)
-    )
+        df.write.format("delta").mode("overwrite").save(silver_path)
+  
 
     print("Silver layer written successfully.")
 
 
-def main():
+def main(city: str = "hyderabad"):
 
     spark = get_spark_session()
 
-    # Temporary need to make it dynamic
-    city = "hyderabad"
-    
-    configure_adls(spark)
+    try:
 
-    bronze_df = extract(spark, city)
+        configure_adls(spark)
 
-    print(f"Bronze Record Count : {bronze_df.count()}")
+        bronze_df = extract(spark, city)
 
-    silver_df = transform(bronze_df)
+        print(f"Bronze Record Count: {bronze_df.count()}")
 
-    print(f"Silver Record Count : {silver_df.count()}")
+        silver_df = transform(bronze_df)
 
-    load(silver_df)
+        print(f"Silver Record Count: {silver_df.count()}")
 
-    print("Bronze -> Silver ETL Completed Successfully.")
+        load(silver_df)
 
-    spark.stop()
+        print("Bronze -> Silver ETL Completed Successfully.")
+
+    finally:
+
+        spark.stop()
 
 
 if __name__ == "__main__":
