@@ -52,8 +52,7 @@ def load(df):
 
     print(f"Writing Silver Data: {silver_path}")
 
-        df.write.format("delta").mode("overwrite").save(silver_path)
-  
+    df.write.format("delta").mode("overwrite").save(silver_path)
 
     print("Silver layer written successfully.")
 

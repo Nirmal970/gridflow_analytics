@@ -18,6 +18,12 @@ dependencies = [
     "python-dotenv"
 ]
 
+[project.scripts]
+bronze-to-silver-weather = "gridflow_analytics.processing.bronze_to_silver_weather:main"
+
+[tool.setuptools.package-dir]
+"" = "src"
+
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["src*"]
+where = ["src"]
+include = ["gridflow_analytics*"]
