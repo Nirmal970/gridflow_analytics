@@ -58,7 +58,7 @@ def load(df):
 
     try:
 
-gold_path = f"abfss://{GOLD_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"f"electricity/gold"
+        gold_path = f"abfss://{GOLD_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"f"electricity/gold"
 
         logger.info(f"Writing Electricity Gold Data: {gold_path}")
 
@@ -71,6 +71,7 @@ gold_path = f"abfss://{GOLD_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"f
         logger.exception("Failed while writing Electricity Gold layer.")
 
         raise
+
 
 
 def main():
