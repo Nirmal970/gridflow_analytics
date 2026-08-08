@@ -23,6 +23,7 @@ dependencies = [
 bronze-to-silver-weather = "gridflow_analytics.processing.bronze_to_silver_weather:main"
 electricity-ingestion = "gridflow_analytics.ingestion.electricity_ingestion:main"
 bronze-to-silver-electricity = "gridflow_analytics.processing.bronze_to_silver_electricity:main"
+electricity-gold = "gridflow_analytics.processing.electricity_gold:main"
 
 [tool.setuptools.package-dir]
 "" = "src"
