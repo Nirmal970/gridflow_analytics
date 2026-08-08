@@ -5,7 +5,7 @@ from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.logger import logger
 from pyspark.dbutils import DBUtils
 
-from gridflow_analytics.config.config import (SILVER_CONTAINER,STORAGE_ACCOUNT)
+from gridflow_analytics.config.config import (GOLD_CONTAINER,SILVER_CONTAINER,STORAGE_ACCOUNT)
 
 def extract(spark):
 
@@ -58,7 +58,7 @@ def load(df):
 
     try:
 
-        gold_path = f"abfss://{SILVER_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"f"electricity/gold"
+gold_path = f"abfss://{GOLD_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"f"electricity/gold"
 
         logger.info(f"Writing Electricity Gold Data: {gold_path}")
 
