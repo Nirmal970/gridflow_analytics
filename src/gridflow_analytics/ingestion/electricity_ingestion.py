@@ -17,11 +17,7 @@ from gridflow_analytics.config.config import (
 
 ENERGYMAP_URL = "https://api.energymap.in/api/intelligence/demand-timeseries"
 
-def fetch_electricity_data(
-    api_key: str,
-    from_timestamp: str,
-    to_timestamp: str,
-) -> dict:
+def fetch_electricity_data(api_key: str,from_timestamp: str,to_timestamp: str) -> dict:
 
     try:
         logger.info("Fetching electricity data from EnergyMap.")
@@ -44,12 +40,7 @@ def fetch_electricity_data(
 
         raise
 
-def write_bronze(
-    spark,
-    data: dict,
-    from_timestamp: str,
-    to_timestamp: str,
-):
+def write_bronze(spark,data: dict,from_timestamp: str,to_timestamp: str):
 
     try:
 
