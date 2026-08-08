@@ -5,11 +5,7 @@ from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.logger import logger
 from pyspark.dbutils import DBUtils
 
-from gridflow_analytics.config.config import (
-    SILVER_CONTAINER,
-    STORAGE_ACCOUNT,
-)
-
+from gridflow_analytics.config.config import (SILVER_CONTAINER,STORAGE_ACCOUNT)
 
 def extract(spark):
 
