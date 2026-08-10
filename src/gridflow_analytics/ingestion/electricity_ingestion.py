@@ -84,17 +84,19 @@ def write_bronze(spark,data: dict,from_timestamp: str,to_timestamp: str):
 
         raise
 
-def main():
+def main(from_timestamp: str = None,to_timestamp: str = None):
 
     spark = get_spark_session()
 
     try:
-        dbutils = DBUtils(spark)
+        dbutils = DBUtils(spark) 
         configure_adls(spark,dbutils)
         api_key = dbutils.secrets.get(scope="gridflow-dev-adls",key="energymap-api-key")
 
-        from_timestamp = "2026-08-03T00:00:00Z"
-        to_timestamp = "2026-08-09T00:00:00Z"
+        if from_timestamp is None or to_timestamp is None:
+            raise ValueError("from_timestamp and to_timestamp are required.")
+
+        logger.info(f"Processing electricity data from {from_timestamp} to {to_timestamp}")
 
         logger.info("Starting Electricity Bronze ingestion.")
 
