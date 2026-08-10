@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from pyspark.sql import Row
 from pyspark.sql.functions import col
+import sys
 
 from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
@@ -84,7 +85,11 @@ def write_bronze(spark,data: dict,from_timestamp: str,to_timestamp: str):
 
         raise
 
-def main(from_timestamp: str,to_timestamp: str):
+def main():
+
+    from_timestamp = sys.argv[1]
+    to_timestamp = sys.argv[2]
+
 
     spark = get_spark_session()
 
