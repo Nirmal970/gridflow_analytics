@@ -4,6 +4,7 @@ from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.logger import logger
 from pyspark.dbutils import DBUtils
+from delta.tables import DeltaTable
 
 from gridflow_analytics.config.config import (GOLD_CONTAINER,SILVER_CONTAINER,STORAGE_ACCOUNT)
 
