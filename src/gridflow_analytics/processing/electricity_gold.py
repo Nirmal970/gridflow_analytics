@@ -56,7 +56,7 @@ def transform(df):
         raise
 
 
-def load(df):
+def load(spark,df):
 
     try:
 
@@ -64,9 +64,25 @@ def load(df):
 
         logger.info(f"Writing Electricity Gold Data: {gold_path}")
 
-        df.write.format("delta").mode("overwrite").save(gold_path)
+        gold_df = df.dropDuplicates(["state","timestamp","source"])
 
-        logger.info("Electricity Gold layer written successfully.")
+        logger.info(f"Gold Record Count After Deduplication: {gold_df.count()}")
+
+        if DeltaTable.isDeltaTable(spark,gold_path):
+
+            gold_table = DeltaTable.forPath(spark,gold_path)
+
+            gold_table.alias("target").merge(
+                gold_df.alias("source"),"target.state = source.state AND target.timestamp = source.timestamp AND target.source = source.source"
+            ).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+
+            logger.info("Electricity Gold Delta MERGE completed successfully.")
+
+        else:
+
+            gold_df.write.format("delta").mode("overwrite").save(gold_path)
+
+            logger.info("Electricity Gold Delta table initialized successfully.")
 
     except Exception:
 
@@ -91,8 +107,7 @@ def main():
 
         gold_df = transform(silver_df)
 
-        load(gold_df)
-
+        load(spark,gold_df)
         logger.info("Electricity Silver -> Gold ETL completed successfully.")
 
     except Exception:

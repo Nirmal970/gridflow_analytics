@@ -4,6 +4,7 @@ import requests
 from datetime import datetime, timezone
 
 from pyspark.sql import Row
+from pyspark.sql.functions import col
 
 from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
@@ -41,6 +42,21 @@ def write_bronze(spark,data: dict,from_timestamp: str,to_timestamp: str):
 
     try:
 
+        bronze_path = f"abfss://{BRONZE_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"f"raw/electricity/demand"
+
+        logger.info(f"Checking existing Electricity Bronze data: {bronze_path}")
+
+        existing_df = spark.read.json(bronze_path)
+
+        existing_count = existing_df.filter((col("source") == "energymap") & (col("dataset") == "state_demand_timeseries") 
+        & (col("from_timestamp") == from_timestamp) & (col("to_timestamp") == to_timestamp)).count()
+
+        if existing_count > 0:
+
+            logger.info(f"Electricity Bronze data already exists for {from_timestamp} to {to_timestamp}. Skipping ingestion.")
+
+            return
+
         raw_json = json.dumps(data)
 
         bronze_df = spark.createDataFrame(
@@ -55,8 +71,6 @@ def write_bronze(spark,data: dict,from_timestamp: str,to_timestamp: str):
                 )
             ]
         )
-
-        bronze_path = f"abfss://{BRONZE_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"f"raw/electricity/demand"
 
         logger.info(f"Writing Electricity Bronze Data: {bronze_path}")
 

@@ -5,6 +5,7 @@ from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.logger import logger
 
 from pyspark.dbutils import DBUtils
+from delta.tables import DeltaTable
 
 from gridflow_analytics.config.config import (BRONZE_CONTAINER,SILVER_CONTAINER,STORAGE_ACCOUNT)
 
@@ -72,17 +73,32 @@ def transform(spark, df):
 
         raise
 
-def load(df):
+def load(spark,df):
 
     try:
 
-        silver_path =f"abfss://{SILVER_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"f"electricity/demand"
+        silver_path = f"abfss://{SILVER_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"f"electricity/demand"
 
         logger.info(f"Writing Electricity Silver Data: {silver_path}")
 
-        df.write.format("delta").mode("overwrite").save(silver_path)
+        silver_df = df.dropDuplicates(["state", "timestamp", "source"])
 
-        logger.info("Electricity Silver layer written successfully.")
+        logger.info(f"Silver Record Count After Deduplication: {silver_df.count()}")
+
+        if DeltaTable.isDeltaTable(spark,silver_path):
+
+            silver_table = DeltaTable.forPath(spark,silver_path)
+
+            silver_table.alias("target").merge(silver_df.alias("source"),
+                "target.state = source.state AND target.timestamp = source.timestamp AND target.source = source.source").whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+
+            logger.info("Electricity Silver Delta MERGE completed successfully.")
+
+        else:
+
+            silver_df.write.format("delta").mode("overwrite").save(silver_path)
+
+            logger.info("Electricity Silver Delta table initialized successfully.")
 
     except Exception:
 
@@ -109,7 +125,7 @@ def main():
 
         logger.info(f"Silver Record Count: {silver_df.count()}")
 
-        load(silver_df)
+        load(spark,silver_df)
 
         logger.info("Electricity Bronze -> Silver ETL Completed Successfully.")
 
