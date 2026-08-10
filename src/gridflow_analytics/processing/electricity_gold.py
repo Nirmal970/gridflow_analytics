@@ -90,6 +90,57 @@ def load(spark,df):
         logger.exception("Failed while writing Electricity Gold layer.")
 
         raise
+        
+def validate_data(df):
+
+    try:
+
+        logger.info("Running Electricity Silver data quality checks...")
+
+        null_count = df.filter(
+            col("timestamp").isNull()
+            | col("state").isNull()
+            | col("demand_mw").isNull()
+        ).count()
+
+        if null_count > 0:
+            raise ValueError(
+                f"Data quality failed: {null_count} records have null "
+                "timestamp, state, or demand_mw."
+            )
+
+        negative_demand_count = df.filter(
+            col("demand_mw") < 0
+        ).count()
+
+        if negative_demand_count > 0:
+            raise ValueError(
+                f"Data quality failed: {negative_demand_count} records "
+                "have negative demand_mw."
+            )
+
+        duplicate_count = (
+            df.groupBy("state", "timestamp", "source")
+            .count()
+            .filter(col("count") > 1)
+            .count()
+        )
+
+        if duplicate_count > 0:
+            raise ValueError(
+                f"Data quality failed: {duplicate_count} duplicate "
+                "state/timestamp/source combinations found."
+            )
+
+        logger.info("Electricity data quality checks passed.")
+
+        return df
+
+    except Exception:
+
+        logger.exception("Electricity data quality validation failed.")
+
+        raise
 
 
 
@@ -105,6 +156,8 @@ def main():
         configure_adls(spark,dbutils)
 
         silver_df = extract(spark)
+        
+        validated_df = validate_data(silver_df)
 
         gold_df = transform(silver_df)
 
