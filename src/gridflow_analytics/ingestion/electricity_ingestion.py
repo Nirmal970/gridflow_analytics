@@ -10,7 +10,6 @@ from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.logger import logger
 from pyspark.dbutils import DBUtils
-from delta.tables import DeltaTable
 
 from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT)
 
@@ -94,8 +93,8 @@ def main():
         configure_adls(spark,dbutils)
         api_key = dbutils.secrets.get(scope="gridflow-dev-adls",key="energymap-api-key")
 
-        from_timestamp = "2026-08-01T00:00:00Z"
-        to_timestamp = "2026-08-02T00:00:00Z"
+        from_timestamp = "2026-08-03T00:00:00Z"
+        to_timestamp = "2026-08-09T00:00:00Z"
 
         logger.info("Starting Electricity Bronze ingestion.")
 
