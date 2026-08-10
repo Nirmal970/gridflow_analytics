@@ -36,7 +36,7 @@ def transform(df):
         
         gold_df = df.filter(col("source_type") == "official")
 
-        gold_df = df.withColumn("demand_vs_peak_pct", round((col("demand_mw") / col("peak_mw")) * 100, 2))
+        gold_df = gold_df.withColumn("demand_vs_peak_pct", round((col("demand_mw") / col("peak_mw")) * 100, 2))
         gold_df = gold_df.withColumn("demand_vs_installed_capacity_pct", round((col("demand_mw") / col("installed_in_state_mw")) * 100, 2))
         gold_df = gold_df.withColumn("frequency_deviation_hz", round(abs(col("frequency_hz") - 50.0), 3))
         gold_df = gold_df.withColumn("hour", hour(col("timestamp")))
