@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gridflow-analytics"
+version = "0.1.0"
+description = "Electricity Analytics Platform built using Azure, Databricks and Spark."
+readme = "README.md"
+requires-python = ">=3.10"
+
+authors = [
+    { name = "Srijan" }
+]
+
+dependencies = [
+    "pyspark>=3.5.0",
+    "python-dotenv",
+    "requests"
+]
+
+[project.scripts]
+bronze-to-silver-weather = "gridflow_analytics.processing.bronze_to_silver_weather:main"
+electricity-ingestion = "gridflow_analytics.ingestion.electricity_ingestion:main"
+bronze-to-silver-electricity = "gridflow_analytics.processing.bronze_to_silver_electricity:main"
+electricity-gold = "gridflow_analytics.processing.electricity_gold:main"
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gridflow_analytics*"]
