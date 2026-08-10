@@ -84,7 +84,7 @@ def write_bronze(spark,data: dict,from_timestamp: str,to_timestamp: str):
 
         raise
 
-def main(from_timestamp: str = None,to_timestamp: str = None):
+def main(from_timestamp: str,to_timestamp: str):
 
     spark = get_spark_session()
 
