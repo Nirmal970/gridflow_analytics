@@ -93,9 +93,6 @@ def main(from_timestamp: str,to_timestamp: str):
         configure_adls(spark,dbutils)
         api_key = dbutils.secrets.get(scope="gridflow-dev-adls",key="energymap-api-key")
 
-        if from_timestamp is None or to_timestamp is None:
-            raise ValueError("from_timestamp and to_timestamp are required.")
-
         logger.info(f"Processing electricity data from {from_timestamp} to {to_timestamp}")
 
         logger.info("Starting Electricity Bronze ingestion.")
