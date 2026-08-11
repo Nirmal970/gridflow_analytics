@@ -39,7 +39,7 @@ def fetch_electricity_data(api_key: str,from_timestamp: str,to_timestamp: str) -
 
         raise
 
-def write_bronze(spark,data: dict,from_timestamp: str,to_timestamp: str):
+def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str):
 
     try:
 
@@ -47,16 +47,21 @@ def write_bronze(spark,data: dict,from_timestamp: str,to_timestamp: str):
 
         logger.info(f"Checking existing Electricity Bronze data: {bronze_path}")
 
-        existing_df = spark.read.json(bronze_path)
+        if dbutils.fs.exists(bronze_path):
 
-        existing_count = existing_df.filter((col("source") == "energymap") & (col("dataset") == "state_demand_timeseries") 
-        & (col("from_timestamp") == from_timestamp) & (col("to_timestamp") == to_timestamp)).count()
+            existing_df = spark.read.json(bronze_path)
 
-        if existing_count > 0:
+            existing_count = existing_df.filter((col("source") == "energymap") & (col("dataset") == "state_demand_timeseries") & (col("from_timestamp") == from_timestamp) & (col("to_timestamp") == to_timestamp)).count()
 
-            logger.info(f"Electricity Bronze data already exists for {from_timestamp} to {to_timestamp}. Skipping ingestion.")
+            if existing_count > 0:
 
-            return
+                logger.info(f"Electricity Bronze data already exists for {from_timestamp} to {to_timestamp}. Skipping ingestion.")
+
+                return
+
+        else:
+
+            logger.info("Electricity Bronze path does not exist. Initializing new Bronze dataset.")
 
         raw_json = json.dumps(data)
 
@@ -104,7 +109,7 @@ def main():
 
         data = fetch_electricity_data(api_key=api_key,from_timestamp=from_timestamp,to_timestamp=to_timestamp)
 
-        write_bronze(spark=spark,data=data,from_timestamp=from_timestamp,to_timestamp=to_timestamp)
+        write_bronze(spark=spark,dbutils=dbutils,data=data,from_timestamp=from_timestamp,to_timestamp=to_timestamp)
 
         logger.info("Electricity Bronze ingestion completed successfully.")
 
