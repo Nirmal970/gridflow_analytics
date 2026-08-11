@@ -25,6 +25,7 @@ electricity-ingestion = "gridflow_analytics.ingestion.electricity_ingestion:main
 bronze-to-silver-electricity = "gridflow_analytics.processing.bronze_to_silver_electricity:main"
 electricity-gold = "gridflow_analytics.processing.electricity_gold:main"
 electricity-modeled-gold = "gridflow_analytics.processing.electricity_modeled_gold:main"
+national-demand-ingestion = "gridflow_analytics.ingestion.national_demand_ingestion:main"
 
 [tool.setuptools.package-dir]
 "" = "src"
