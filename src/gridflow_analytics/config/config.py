@@ -12,6 +12,8 @@ GOLD_WEATHER_PATH = "weather"
 GOLD_CONTAINER = "gold"
 MODELED_SOURCE = "modeled_ml_forecast_v1"
 
+
+ENERGYMAP_STATE_DEMAND_URL = "https://api.energymap.in/api/intelligence/demand-timeseries"
 ENERGYMAP_NATIONAL_DEMAND_URL = "https://api.energymap.in/api/intelligence/national-demand-4min"
 ENERGYMAP_NATIONAL_DEMAND_HOURS = 24
 ENERGYMAP_REQUEST_TIMEOUT_SECONDS = 60

@@ -11,27 +11,25 @@ from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.logger import logger
 from pyspark.dbutils import DBUtils
+from gridflow_analytics.common.energymap_api import get
 
-from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_BASE_URL,ENERGYMAP_SECRET_SCOPE,ENERGYMAP_API_KEY_SECRET)
+from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_BASE_URL,ENERGYMAP_SECRET_SCOPE,ENERGYMAP_API_KEY_SECRET,ENERGYMAP_STATE_DEMAND_URL)
 
 ENERGYMAP_URL = "https://api.energymap.in/api/intelligence/demand-timeseries"
 
-def fetch_electricity_data(api_key: str,from_timestamp: str,to_timestamp: str) -> dict:
+def fetch_electricity_data(dbutils,from_timestamp: str,to_timestamp: str) -> dict:
 
     try:
+
         logger.info("Fetching electricity data from EnergyMap.")
 
         params = {"from": from_timestamp,"to": to_timestamp}
 
-        headers = {"X-API-Key": api_key,"Accept": "application/json"}
-
-        response = requests.get(ENERGYMAP_URL,params=params,headers=headers,timeout=30)
-
-        response.raise_for_status()
+        data = get(dbutils,ENERGYMAP_STATE_DEMAND_URL,params)
 
         logger.info("Electricity data fetched successfully from EnergyMap.")
 
-        return response.json()
+        return data
 
     except Exception:
 
@@ -107,7 +105,7 @@ def main():
 
         logger.info("Starting Electricity Bronze ingestion.")
 
-        data = fetch_electricity_data(api_key=api_key,from_timestamp=from_timestamp,to_timestamp=to_timestamp)
+        data = fetch_electricity_data(dbutils=dbutils,from_timestamp=from_timestamp,to_timestamp=to_timestamp)
 
         write_bronze(spark=spark,dbutils=dbutils,data=data,from_timestamp=from_timestamp,to_timestamp=to_timestamp)
 
