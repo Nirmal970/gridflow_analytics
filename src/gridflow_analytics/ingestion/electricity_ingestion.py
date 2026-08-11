@@ -12,7 +12,7 @@ from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.logger import logger
 from pyspark.dbutils import DBUtils
 
-from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT)
+from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_BASE_URL,ENERGYMAP_SECRET_SCOPE,ENERGYMAP_API_KEY_SECRET)
 
 ENERGYMAP_URL = "https://api.energymap.in/api/intelligence/demand-timeseries"
 
@@ -101,7 +101,7 @@ def main():
     try:
         dbutils = DBUtils(spark) 
         configure_adls(spark,dbutils)
-        api_key = dbutils.secrets.get(scope="gridflow-dev-adls",key="energymap-api-key")
+        api_key = dbutils.secrets.get(scope=ENERGYMAP_SECRET_SCOPE,key=ENERGYMAP_API_KEY_SECRET)
 
         logger.info(f"Processing electricity data from {from_timestamp} to {to_timestamp}")
 
