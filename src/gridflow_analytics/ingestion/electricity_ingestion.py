@@ -13,7 +13,7 @@ from gridflow_analytics.common.logger import logger
 from pyspark.dbutils import DBUtils
 from gridflow_analytics.common.energymap_api import get
 
-from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_BASE_URL,ENERGYMAP_SECRET_SCOPE,ENERGYMAP_API_KEY_SECRET,ENERGYMAP_STATE_DEMAND_URL)
+from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_STATE_DEMAND_URL)
 
 ENERGYMAP_URL = "https://api.energymap.in/api/intelligence/demand-timeseries"
 

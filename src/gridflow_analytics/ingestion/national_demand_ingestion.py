@@ -13,7 +13,7 @@ from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.logger import logger
 from gridflow_analytics.common.energymap_api import get
 
-from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_SECRET_SCOPE,ENERGYMAP_API_KEY_SECRET,ENERGYMAP_NATIONAL_DEMAND_URL)
+from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_NATIONAL_DEMAND_URL)
 
 
 def fetch_national_demand_data(dbutils,from_timestamp: str,to_timestamp: str) -> dict:

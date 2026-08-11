@@ -3,6 +3,8 @@ import requests
 from gridflow_analytics.common.logger import logger
 from gridflow_analytics.config.config import ENERGYMAP_REQUEST_TIMEOUT_SECONDS
 
+from gridflow_analytics.config.config import (ENERGYMAP_SECRET_SCOPE,ENERGYMAP_API_KEY_SECRET)
+
 
 def get_api_key(dbutils):
 
