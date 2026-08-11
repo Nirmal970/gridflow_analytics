@@ -92,15 +92,12 @@ def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str)
         logger.exception("Failed while writing Frequency Bronze layer.")
 
         raise
-        
-def get_parameter(argument: str) -> str:
-    return argument.split("=",1)[1]
 
 
 def main():
 
-    from_timestamp = get_parameter(sys.argv[1])
-    to_timestamp = get_parameter(sys.argv[2])
+    from_timestamp = sys.argv[1]
+    to_timestamp = sys.argv[2]
 
     spark = get_spark_session()
 
