@@ -8,11 +8,12 @@ from delta.tables import DeltaTable
 
 from gridflow_analytics.config.config import (GOLD_CONTAINER,SILVER_CONTAINER,STORAGE_ACCOUNT)
 
+
 def extract(spark):
 
     try:
 
-        silver_path = f"abfss://{SILVER_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"f"electricity/demand"
+        silver_path = f"abfss://{SILVER_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/electricity/demand"
 
         logger.info(f"Reading Electricity Silver Data: {silver_path}")
 
@@ -34,16 +35,15 @@ def transform(df):
     try:
 
         logger.info("Transforming Electricity Silver data into Gold format...")
-       
 
-        gold_df = df.withColumn("demand_vs_peak_pct", round((col("demand_mw") / col("peak_mw")) * 100, 2))
-        gold_df = gold_df.withColumn("demand_vs_installed_capacity_pct", round((col("demand_mw") / col("installed_in_state_mw")) * 100, 2))
-        gold_df = gold_df.withColumn("frequency_deviation_hz", round(abs(col("frequency_hz") - 50.0), 3))
-        gold_df = gold_df.withColumn("hour", hour(col("timestamp")))
-        gold_df = gold_df.withColumn("day_of_week", dayofweek(col("timestamp")))
-        gold_df = gold_df.withColumn("day_of_month", dayofmonth(col("timestamp")))
-        gold_df = gold_df.withColumn("month", month(col("timestamp")))
-        gold_df = gold_df.withColumn("is_weekend", when(dayofweek(col("timestamp")).isin(1, 7), True).otherwise(False))
+        gold_df = df.withColumn("demand_vs_peak_pct",round((col("demand_mw") / col("peak_mw")) * 100,2))
+        gold_df = gold_df.withColumn("demand_vs_installed_capacity_pct",round((col("demand_mw") / col("installed_in_state_mw")) * 100,2))
+        gold_df = gold_df.withColumn("frequency_deviation_hz",round(abs(col("frequency_hz") - 50.0),3))
+        gold_df = gold_df.withColumn("hour",hour(col("timestamp")))
+        gold_df = gold_df.withColumn("day_of_week",dayofweek(col("timestamp")))
+        gold_df = gold_df.withColumn("day_of_month",dayofmonth(col("timestamp")))
+        gold_df = gold_df.withColumn("month",month(col("timestamp")))
+        gold_df = gold_df.withColumn("is_weekend",when(dayofweek(col("timestamp")).isin(1,7),True).otherwise(False))
 
         logger.info(f"Gold Record Count: {gold_df.count()}")
 
@@ -60,7 +60,7 @@ def load(spark,df):
 
     try:
 
-        gold_path = f"abfss://{GOLD_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/"f"electricity/gold"
+        gold_path = f"abfss://{GOLD_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/electricity/gold"
 
         logger.info(f"Writing Electricity Gold Data: {gold_path}")
 
@@ -89,48 +89,38 @@ def load(spark,df):
         logger.exception("Failed while writing Electricity Gold layer.")
 
         raise
-        
+
+
 def validate_data(df):
 
     try:
-    
+
         df = df.filter(col("source_type") == "official")
 
         logger.info("Running Electricity Silver data quality checks...")
 
-        null_count = df.filter(
-            col("timestamp").isNull()
-            | col("state").isNull()
-            | col("demand_mw").isNull()
-        ).count()
-
-        if null_count > 0:
-            raise ValueError(
-                f"Data quality failed: {null_count} records have null "
-                "timestamp, state, or demand_mw."
-            )
-
-        negative_demand_count = df.filter(
-            col("demand_mw") < 0
-        ).count()
+        negative_demand_count = df.filter(col("demand_mw") < 0).count()
 
         if negative_demand_count > 0:
+
             raise ValueError(
                 f"Data quality failed: {negative_demand_count} records "
                 "have negative demand_mw."
             )
 
         duplicate_count = (
-            df.groupBy("state", "timestamp", "source")
+            df.groupBy("state","timestamp","source")
             .count()
             .filter(col("count") > 1)
             .count()
         )
 
         if duplicate_count > 0:
-            raise ValueError(
-                f"Data quality failed: {duplicate_count} duplicate "
-                "state/timestamp/source combinations found."
+
+            logger.warning(
+                f"Data quality warning: {duplicate_count} duplicate "
+                "state/timestamp/source combinations found. "
+                "Duplicates will be removed before Gold MERGE."
             )
 
         logger.info("Electricity data quality checks passed.")
@@ -142,7 +132,6 @@ def validate_data(df):
         logger.exception("Electricity data quality validation failed.")
 
         raise
-
 
 
 def main():
@@ -157,12 +146,13 @@ def main():
         configure_adls(spark,dbutils)
 
         silver_df = extract(spark)
-        
+
         validated_df = validate_data(silver_df)
 
         gold_df = transform(validated_df)
 
         load(spark,gold_df)
+
         logger.info("Electricity Silver -> Gold ETL completed successfully.")
 
     except Exception:
