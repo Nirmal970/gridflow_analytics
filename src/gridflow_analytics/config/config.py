@@ -15,7 +15,9 @@ MODELED_SOURCE = "modeled_ml_forecast_v1"
 
 ENERGYMAP_STATE_DEMAND_URL = "https://api.energymap.in/api/intelligence/demand-timeseries"
 ENERGYMAP_NATIONAL_DEMAND_URL = "https://api.energymap.in/api/intelligence/national-demand-4min"
+ENERGYMAP_NATIONAL_FUELMIX_URL = "https://api.energymap.in/api/intelligence/national-fuelmix-4min"
+ENERGYMAP_FREQUENCY_URL = "https://api.energymap.in/api/intelligence/grid-frequency"
 ENERGYMAP_NATIONAL_DEMAND_HOURS = 24
 ENERGYMAP_REQUEST_TIMEOUT_SECONDS = 60
 ENERGYMAP_SECRET_SCOPE = "gridflow-dev-adls"
-ENERGYMAP_API_KEY_SECRET = "energymap-api-key"
+ENERGYMAP_API_KEY_SECRET = "energymap-api-key" 
