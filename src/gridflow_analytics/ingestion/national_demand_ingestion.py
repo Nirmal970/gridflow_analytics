@@ -1,38 +1,43 @@
 import json
+import requests
+import sys
+
 from datetime import datetime,timezone
+
+from pyspark.sql import Row
+from pyspark.sql.functions import col
+from pyspark.dbutils import DBUtils
 
 from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
-from gridflow_analytics.common.energymap_api import get
 from gridflow_analytics.common.logger import logger
+from gridflow_analytics.common.energymap_api import get
 
-from pyspark.dbutils import DBUtils
-from pyspark.sql import Row
-from pyspark.sql.functions import col
-
-from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_NATIONAL_DEMAND_URL,ENERGYMAP_NATIONAL_HOURS)
+from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_SECRET_SCOPE,ENERGYMAP_API_KEY_SECRET,ENERGYMAP_NATIONAL_DEMAND_URL)
 
 
-def fetch_national_demand(dbutils):
+def fetch_national_demand_data(dbutils,from_timestamp: str,to_timestamp: str) -> dict:
 
     try:
 
-        logger.info("Fetching EnergyMap National Demand data.")
+        logger.info("Fetching national demand data from EnergyMap.")
 
-        data = get(dbutils,ENERGYMAP_NATIONAL_DEMAND_URL,{"hours": ENERGYMAP_NATIONAL_HOURS})
+        params = {"from": from_timestamp,"to": to_timestamp}
 
-        logger.info("EnergyMap National Demand data fetched successfully.")
+        data = get(dbutils,ENERGYMAP_NATIONAL_DEMAND_URL,params)
+
+        logger.info("National demand data fetched successfully from EnergyMap.")
 
         return data
 
     except Exception:
 
-        logger.exception("Failed to fetch EnergyMap National Demand data.")
+        logger.exception("Failed while fetching national demand data from EnergyMap.")
 
         raise
 
 
-def write_bronze(spark,dbutils,data):
+def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str):
 
     try:
 
@@ -40,67 +45,83 @@ def write_bronze(spark,dbutils,data):
 
         logger.info(f"Checking existing National Demand Bronze data: {bronze_path}")
 
-        if dbutils.fs.ls(bronze_path):
+        try:
 
             existing_df = spark.read.json(bronze_path)
 
-            existing_count = existing_df.filter(col("dataset") == "national_demand_4min").count()
+            existing_count = existing_df.filter(
+                (col("source") == "energymap") &
+                (col("dataset") == "national_demand_4min") &
+                (col("from_timestamp") == from_timestamp) &
+                (col("to_timestamp") == to_timestamp)
+            ).count()
 
             if existing_count > 0:
 
-                logger.info("National Demand Bronze data already exists. Skipping ingestion.")
+                logger.info(f"National Demand Bronze data already exists for {from_timestamp} to {to_timestamp}. Skipping ingestion.")
 
                 return
 
+        except Exception:
+
+            logger.info("National Demand Bronze path does not exist. Initializing new Bronze dataset.")
+
+        raw_json = json.dumps(data)
+
+        bronze_df = spark.createDataFrame(
+            [
+                Row(
+                    source="energymap",
+                    dataset="national_demand_4min",
+                    from_timestamp=from_timestamp,
+                    to_timestamp=to_timestamp,
+                    ingestion_timestamp=datetime.now(timezone.utc),
+                    raw_response=raw_json
+                )
+            ]
+        )
+
+        logger.info(f"Writing National Demand Bronze Data: {bronze_path}")
+
+        bronze_df.write.mode("append").json(bronze_path)
+
+        logger.info("National Demand Bronze layer written successfully.")
+
     except Exception:
 
-        logger.info("National Demand Bronze path does not exist. Initializing new Bronze dataset.")
+        logger.exception("Failed while writing National Demand Bronze layer.")
 
-    raw_json = json.dumps(data)
-
-    bronze_df = spark.createDataFrame([
-        Row(
-            source="energymap",
-            dataset="national_demand_4min",
-            ingestion_timestamp=datetime.now(timezone.utc),
-            raw_response=raw_json
-        )
-    ])
-
-    logger.info(f"Writing National Demand Bronze Data: {bronze_path}")
-
-    bronze_df.write.mode("append").json(bronze_path)
-
-    logger.info("National Demand Bronze layer written successfully.")
+        raise
 
 
 def main():
 
-    spark = get_spark_session()
+    from_timestamp = sys.argv[1]
+    to_timestamp = sys.argv[2]
 
-    dbutils = DBUtils(spark)
+    spark = get_spark_session()
 
     try:
 
-        logger.info("Starting EnergyMap National Demand ingestion.")
+        dbutils = DBUtils(spark)
 
         configure_adls(spark,dbutils)
 
-        data = fetch_national_demand(dbutils)
+        logger.info(f"Processing national demand data from {from_timestamp} to {to_timestamp}")
 
-        write_bronze(spark,dbutils,data)
+        logger.info("Starting National Demand Bronze ingestion.")
 
-        logger.info("EnergyMap National Demand ingestion completed successfully.")
+        data = fetch_national_demand_data(dbutils,from_timestamp,to_timestamp)
 
-    except Exception:
+        write_bronze(spark,dbutils,data,from_timestamp,to_timestamp)
 
-        logger.exception("EnergyMap National Demand ingestion failed.")
+        logger.info("National Demand Bronze ingestion completed successfully.")
+
+    except Exception as exc:
+
+        logger.exception(f"National Demand Bronze ingestion failed: {exc}")
 
         raise
-
-    finally:
-
-        logger.info("EnergyMap National Demand ingestion completed.")
 
 
 if __name__ == "__main__":

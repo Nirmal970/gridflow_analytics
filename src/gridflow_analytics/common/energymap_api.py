@@ -10,7 +10,7 @@ def get_api_key(dbutils):
 
         logger.info("Reading EnergyMap API key from Databricks Secret Scope.")
 
-        api_key = dbutils.secrets.get(scope="gridflow-dev-adls",key="energymap-api-key")
+        api_key = dbutils.secrets.get(scope=ENERGYMAP_SECRET_SCOPE,key=ENERGYMAP_API_KEY_SECRET)
 
         if not api_key:
             raise ValueError("EnergyMap API key is empty.")
@@ -42,38 +42,10 @@ def get(dbutils,url,params=None):
 
         response.raise_for_status()
 
-        data = response.json()
-
-        logger.info("EnergyMap API response received successfully.")
-
-        return data
-
-    except requests.exceptions.Timeout:
-
-        logger.exception(f"EnergyMap API request timed out: {url}")
-
-        raise
-
-    except requests.exceptions.HTTPError:
-
-        logger.exception(f"EnergyMap API HTTP error: {url}")
-
-        raise
-
-    except requests.exceptions.RequestException:
-
-        logger.exception(f"EnergyMap API request failed: {url}")
-
-        raise
-
-    except ValueError:
-
-        logger.exception(f"EnergyMap API returned invalid JSON: {url}")
-
-        raise
+        return response.json()
 
     except Exception:
 
-        logger.exception(f"Unexpected EnergyMap API error: {url}")
+        logger.exception(f"EnergyMap API request failed: {url}")
 
         raise
