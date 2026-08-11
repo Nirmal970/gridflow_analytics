@@ -47,7 +47,7 @@ def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str)
 
         logger.info(f"Checking existing Electricity Bronze data: {bronze_path}")
 
-        if dbutils.fs.exists(bronze_path):
+        try:
 
             existing_df = spark.read.json(bronze_path)
 
@@ -59,9 +59,9 @@ def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str)
 
                 return
 
-        else:
+        except Exception:
 
-            logger.info("Electricity Bronze path does not exist. Initializing new Bronze dataset.")
+            logger.info("Bronze path does not exist. Initializing new Bronze dataset.")
 
         raw_json = json.dumps(data)
 
