@@ -99,7 +99,6 @@ def main():
     try:
         dbutils = DBUtils(spark) 
         configure_adls(spark,dbutils)
-        api_key = dbutils.secrets.get(scope=ENERGYMAP_SECRET_SCOPE,key=ENERGYMAP_API_KEY_SECRET)
 
         logger.info(f"Processing electricity data from {from_timestamp} to {to_timestamp}")
 
