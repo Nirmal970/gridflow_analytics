@@ -21,6 +21,12 @@ dependencies = [
 
 [project.scripts]
 demand-ingestion = "gridflow_analytics.ingestion.demand_ingestion:main"
+national-demand-ingestion = "gridflow_analytics.ingestion.national_demand_ingestion:main"
+national-fuelmix-ingestion = "gridflow_analytics.ingestion.national_fuelmix_ingestion:main"
+frequency-ingestion = "gridflow_analytics.ingestion.frequency_ingestion:main"
+weather-ingestion = "gridflow_analytics.ingestion.weather_ingestion:main"
+dam-ingestion = "gridflow_analytics.ingestion.dam_ingestion:main"
+psp-ingestion = "gridflow_analytics.ingestion.psp_ingestion:main"
 
 [tool.setuptools.package-dir]
 "" = "src"

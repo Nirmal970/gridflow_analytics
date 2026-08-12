@@ -1,7 +1,6 @@
 import json
-import sys
 
-from datetime import datetime,timezone
+from datetime import datetime,timezone,timedelta
 
 from pyspark.sql import Row
 from pyspark.sql.functions import col
@@ -15,19 +14,11 @@ from gridflow_analytics.common.logger import logger
 from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_NATIONAL_FUELMIX_URL)
 
 
-def fetch_fuelmix_data(dbutils,from_timestamp: str,to_timestamp: str) -> dict:
+def fetch_fuelmix_data(dbutils,hours: int) -> dict:
 
     try:
 
         logger.info("Fetching national fuel mix data from EnergyMap.")
-
-        from_time = datetime.fromisoformat(from_timestamp.replace("Z","+00:00"))
-        to_time = datetime.fromisoformat(to_timestamp.replace("Z","+00:00"))
-
-        hours = int((to_time - from_time).total_seconds() / 3600)
-
-        if hours <= 0:
-            raise ValueError("to_timestamp must be greater than from_timestamp.")
 
         params = {"hours": hours}
 
@@ -44,7 +35,7 @@ def fetch_fuelmix_data(dbutils,from_timestamp: str,to_timestamp: str) -> dict:
         raise
 
 
-def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str):
+def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str,hours: int):
 
     try:
 
@@ -76,6 +67,7 @@ def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str)
                 dataset="national_fuelmix_4min",
                 from_timestamp=from_timestamp,
                 to_timestamp=to_timestamp,
+                hours=hours,
                 ingestion_timestamp=datetime.now(timezone.utc),
                 raw_response=raw_json
             )
@@ -96,8 +88,13 @@ def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str)
 
 def main():
 
-    from_timestamp = sys.argv[1]
-    to_timestamp = sys.argv[2]
+    hours = 48
+
+    to_time = datetime.now(timezone.utc)
+    from_time = to_time - timedelta(hours=hours)
+
+    from_timestamp = from_time.isoformat().replace("+00:00","Z")
+    to_timestamp = to_time.isoformat().replace("+00:00","Z")
 
     spark = get_spark_session()
 
@@ -111,13 +108,13 @@ def main():
 
         logger.info("Starting National Fuel Mix Bronze ingestion.")
 
-        data = fetch_fuelmix_data(dbutils=dbutils,from_timestamp=from_timestamp,to_timestamp=to_timestamp)
+        data = fetch_fuelmix_data(dbutils=dbutils,hours=hours)
 
-        write_bronze(spark=spark,dbutils=dbutils,data=data,from_timestamp=from_timestamp,to_timestamp=to_timestamp)
+        write_bronze(spark=spark,dbutils=dbutils,data=data,from_timestamp=from_timestamp,to_timestamp=to_timestamp,hours=hours)
 
         logger.info("National Fuel Mix Bronze ingestion completed successfully.")
 
-    except Exception as exc: 
+    except Exception as exc:
 
         logger.exception(f"National Fuel Mix Bronze ingestion failed: {exc}")
 

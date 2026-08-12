@@ -11,26 +11,26 @@ from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.energymap_api import get
 from gridflow_analytics.common.logger import logger
 
-from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_FREQUENCY_URL)
+from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_WEATHER_URL)
 
 
-def fetch_frequency_data(dbutils,hours: int) -> dict:
+def fetch_weather_data(dbutils,hours: int) -> dict:
 
     try:
 
-        logger.info("Fetching grid frequency data from EnergyMap.")
+        logger.info("Fetching weather data from EnergyMap.")
 
         params = {"hours": hours}
 
-        data = get(dbutils,ENERGYMAP_FREQUENCY_URL,params)
+        data = get(dbutils,ENERGYMAP_WEATHER_URL,params)
 
-        logger.info("Grid frequency data fetched successfully from EnergyMap.")
+        logger.info("Weather data fetched successfully from EnergyMap.")
 
         return data
 
     except Exception:
 
-        logger.exception("Failed while fetching grid frequency data from EnergyMap.")
+        logger.exception("Failed while fetching weather data from EnergyMap.")
 
         raise
 
@@ -39,19 +39,19 @@ def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str,
 
     try:
 
-        bronze_path = f"abfss://{BRONZE_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/raw/electricity/frequency"
+        bronze_path = f"abfss://{BRONZE_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/raw/electricity/weather"
 
-        logger.info(f"Checking existing Frequency Bronze data: {bronze_path}")
+        logger.info(f"Checking existing Weather Bronze data: {bronze_path}")
 
         try:
 
             existing_df = spark.read.json(bronze_path)
 
-            existing_count = existing_df.filter((col("source") == "energymap") & (col("dataset") == "grid_frequency") & (col("from_timestamp") == from_timestamp) & (col("to_timestamp") == to_timestamp)).count()
+            existing_count = existing_df.filter((col("source") == "energymap") & (col("dataset") == "weather") & (col("from_timestamp") == from_timestamp) & (col("to_timestamp") == to_timestamp)).count()
 
             if existing_count > 0:
 
-                logger.info(f"Frequency Bronze data already exists for {from_timestamp} to {to_timestamp}. Skipping ingestion.")
+                logger.info(f"Weather Bronze data already exists for {from_timestamp} to {to_timestamp}. Skipping ingestion.")
 
                 return
 
@@ -64,7 +64,7 @@ def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str,
         bronze_df = spark.createDataFrame([
             Row(
                 source="energymap",
-                dataset="grid_frequency",
+                dataset="weather",
                 from_timestamp=from_timestamp,
                 to_timestamp=to_timestamp,
                 hours=hours,
@@ -73,15 +73,15 @@ def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str,
             )
         ])
 
-        logger.info(f"Writing Frequency Bronze Data: {bronze_path}")
+        logger.info(f"Writing Weather Bronze Data: {bronze_path}")
 
         bronze_df.write.mode("append").json(bronze_path)
 
-        logger.info("Frequency Bronze layer written successfully.")
+        logger.info("Weather Bronze layer written successfully.")
 
     except Exception:
 
-        logger.exception("Failed while writing Frequency Bronze layer.")
+        logger.exception("Failed while writing Weather Bronze layer.")
 
         raise
 
@@ -104,19 +104,19 @@ def main():
 
         configure_adls(spark,dbutils)
 
-        logger.info(f"Processing frequency data from {from_timestamp} to {to_timestamp}")
+        logger.info(f"Processing weather data from {from_timestamp} to {to_timestamp}")
 
-        logger.info("Starting Frequency Bronze ingestion.")
+        logger.info("Starting Weather Bronze ingestion.")
 
-        data = fetch_frequency_data(dbutils=dbutils,hours=hours)
+        data = fetch_weather_data(dbutils=dbutils,hours=hours)
 
         write_bronze(spark=spark,dbutils=dbutils,data=data,from_timestamp=from_timestamp,to_timestamp=to_timestamp,hours=hours)
 
-        logger.info("Frequency Bronze ingestion completed successfully.")
+        logger.info("Weather Bronze ingestion completed successfully.")
 
     except Exception as exc:
 
-        logger.exception(f"Frequency Bronze ingestion failed: {exc}")
+        logger.exception(f"Weather Bronze ingestion failed: {exc}")
 
         raise
 
