@@ -26,7 +26,15 @@ national-fuelmix-ingestion = "gridflow_analytics.ingestion.national_fuelmix_inge
 frequency-ingestion = "gridflow_analytics.ingestion.frequency_ingestion:main"
 weather-ingestion = "gridflow_analytics.ingestion.weather_ingestion:main"
 dam-ingestion = "gridflow_analytics.ingestion.dam_ingestion:main"
+
 psp-ingestion = "gridflow_analytics.ingestion.psp_ingestion:main"
+demand-silver = "gridflow_analytics.processing.demand_silver:main"
+national-demand-silver = "gridflow_analytics.processing.national_demand_silver:main"
+national-fuelmix-silver = "gridflow_analytics.processing.national_fuelmix_silver:main"
+frequency-silver = "gridflow_analytics.processing.frequency_silver:main"
+weather-silver = "gridflow_analytics.processing.weather_silver:main"
+dam-silver = "gridflow_analytics.processing.dam_silver:main"
+psp-silver = "gridflow_analytics.processing.psp_silver:main"
 
 [tool.setuptools.package-dir]
 "" = "src"
