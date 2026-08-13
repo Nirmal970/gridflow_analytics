@@ -1,4 +1,4 @@
-from pyspark.sql.functions import col,to_timestamp
+from pyspark.sql.functions import col,to_timestamp,explode_outer
 
 from gridflow_analytics.common.logger import logger
 from gridflow_analytics.common.spark_session import get_spark_session
