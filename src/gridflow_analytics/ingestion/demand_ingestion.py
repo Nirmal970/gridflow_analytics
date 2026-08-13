@@ -18,7 +18,7 @@ def fetch_demand_data(dbutils,from_timestamp: str,to_timestamp: str) -> dict:
 
     try:
 
-        logger.info("Fetching demand timeseries data from EnergyMap. CI\CD Test")
+        logger.info("Fetching demand timeseries data from EnergyMap. CI\CD Test1")
 
         params = {"from": from_timestamp,"to": to_timestamp}
 
