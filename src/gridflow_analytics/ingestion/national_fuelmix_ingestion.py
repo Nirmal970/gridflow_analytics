@@ -12,6 +12,7 @@ from gridflow_analytics.common.energymap_api import get
 from gridflow_analytics.common.logger import logger
 
 from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_NATIONAL_FUELMIX_URL)
+from gridflow_analytics.processing.silver_utils import read_bronze_observations,add_processed_timestamp,merge_delta
 
 
 def fetch_fuelmix_data(dbutils,hours: int) -> dict:
