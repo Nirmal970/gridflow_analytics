@@ -30,15 +30,9 @@ def main():
         
         df = df.select(explode_outer(col("points")).alias("point"))
 
-        df = df.select(
-            to_timestamp(col("ts_utc")).alias("timestamp"),
-            col("fuel").cast("string").alias("fuel"),
-            col("mw").cast("double").alias("mw"),
-            col("source").cast("string").alias("source"),
-            col("source_url").cast("string").alias("source_url"),
-            col("is_provisional").cast("boolean").alias("is_provisional"),
-            to_timestamp(col("collected_at")).alias("collected_at")
-        )
+        df = df.select(to_timestamp(col("point.ts_utc")).alias("timestamp"),col("point.fuel").cast("string").alias("fuel"),col("point.mw").cast("double").alias("mw")
+        ,col("point.source").cast("string").alias("source"),col("point.source_url").cast("string").alias("source_url"),col("point.is_provisional").cast("boolean").alias("is_provisional"),
+        to_timestamp(col("point.collected_at")).alias("collected_at"))
 
         df = df.filter(col("timestamp").isNotNull() & col("fuel").isNotNull() & col("mw").isNotNull())
 
