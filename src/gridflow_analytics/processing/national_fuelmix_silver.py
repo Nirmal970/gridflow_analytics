@@ -27,6 +27,8 @@ def main():
         logger.info("Starting National Fuel Mix Silver processing.")
 
         df = read_bronze_observations(spark,bronze_path)
+        
+        df = df.select(explode_outer(col("points")).alias("point"))
 
         df = df.select(
             to_timestamp(col("ts_utc")).alias("timestamp"),
