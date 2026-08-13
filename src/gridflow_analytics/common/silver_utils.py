@@ -31,7 +31,18 @@ def read_bronze_observations(spark,bronze_path):
 
     parsed_type = parsed_df.schema["_parsed"].dataType
 
-    metadata_columns = [column for column in ["source","dataset","from_timestamp","to_timestamp","hours","ingestion_timestamp"] if column in bronze_df.columns]
+    metadata_columns = []
+
+    if "source" in bronze_df.columns:
+
+        parsed_df = parsed_df.withColumnRenamed("source","bronze_source")
+        metadata_columns.append("bronze_source")
+
+    for column in ["dataset","from_timestamp","to_timestamp","hours","ingestion_timestamp"]:
+
+        if column in parsed_df.columns:
+
+            metadata_columns.append(column)
 
     if isinstance(parsed_type,ArrayType):
 
@@ -77,10 +88,7 @@ def merge_delta(spark,df,silver_path,merge_condition):
 
         silver_table = DeltaTable.forPath(spark,silver_path)
 
-        silver_table.alias("target").merge(
-            df.alias("source"),
-            merge_condition
-        ).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+        silver_table.alias("target").merge(df.alias("source"),merge_condition).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
 
     else:
 
