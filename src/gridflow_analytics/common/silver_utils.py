@@ -33,6 +33,10 @@ def read_bronze_observations(spark,bronze_path):
 
     metadata_columns = [column for column in ["source","dataset","from_timestamp","to_timestamp","hours","ingestion_timestamp"] if column in bronze_df.columns]
 
+    bronze_df = bronze_df.withColumnRenamed("source","bronze_source") if "source" in bronze_df.columns else bronze_df
+
+    metadata_columns = ["bronze_source" if column == "source" else column for column in metadata_columns]
+
     if isinstance(parsed_type,ArrayType):
 
         result_df = parsed_df.select(*metadata_columns,explode_outer(col("_parsed")).alias("_record")).select(*metadata_columns,col("_record.*"))
