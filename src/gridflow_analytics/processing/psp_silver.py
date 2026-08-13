@@ -39,9 +39,9 @@ def main():
 
         df = df.withColumn("processed_timestamp",current_timestamp())
 
-        df = df.dropDuplicates(["snapshot_hash"])
+        df = df.dropDuplicates(["date","region","state"])
 
-        merge_delta(spark,df,silver_path,"target.snapshot_hash = source.snapshot_hash")
+        merge_delta(spark,df,silver_path,"target.date <=> source.date AND target.region <=> source.region AND target.state <=> source.state")
 
         logger.info("PSP Silver processing completed successfully.")
 
