@@ -1,14 +1,13 @@
-from pyspark.sql.functions import col,current_timestamp,sha2
+from pyspark.sql.types import StructType,StructField,StringType,DoubleType,ArrayType
+from pyspark.sql.functions import col,from_json,explode_outer,current_timestamp,to_date
+from pyspark.dbutils import DBUtils
 
 from gridflow_analytics.common.logger import logger
 from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
-from pyspark.dbutils import DBUtils
+from gridflow_analytics.common.silver_utils import merge_delta
 
 from gridflow_analytics.config.config import BRONZE_CONTAINER,STORAGE_ACCOUNT,SILVER_CONTAINER
-
-from gridflow_analytics.common.silver_utils import read_bronze_observations,add_processed_timestamp,merge_delta
-
 
 
 def main():
@@ -28,20 +27,28 @@ def main():
 
         df = spark.read.json(bronze_path)
 
-        df = df.select(
-            col("source").cast("string").alias("source"),
-            col("dataset").cast("string").alias("dataset"),
-            col("ingestion_timestamp").alias("ingestion_timestamp"),
-            col("raw_response").cast("string").alias("raw_response")
-        )
+        item_schema = StructType([StructField("date",StringType(),True),StructField("region",StringType(),True),StructField("state",StringType(),True),StructField("peak_demand_mw",DoubleType(),True),StructField("peak_demand_met_mw",DoubleType(),True),StructField("peak_shortage_mw",DoubleType(),True),StructField("energy_met_mu",DoubleType(),True),StructField("energy_shortage_mu",DoubleType(),True),StructField("frequency_min_hz",DoubleType(),True),StructField("frequency_max_hz",DoubleType(),True),StructField("frequency_avg_hz",DoubleType(),True),StructField("source_url",StringType(),True)])
 
-        df = df.withColumn("snapshot_hash",sha2(col("raw_response"),256))
+        response_schema = StructType([StructField("items",ArrayType(item_schema),True)])
+
+        df = df.withColumn("parsed_response",from_json(col("raw_response"),response_schema))
+
+        df = df.select(explode_outer(col("parsed_response.items")).alias("item"))
+
+        df = df.select(to_date(col("item.date")).alias("date"),col("item.region").cast("string").alias("region"),col("item.state").cast("string").alias("state"),
+        col("item.peak_demand_mw").cast("double").alias("peak_demand_mw"),col("item.peak_demand_met_mw").cast("double").alias("peak_demand_met_mw"),
+        col("item.peak_shortage_mw").cast("double").alias("peak_shortage_mw"),col("item.energy_met_mu").cast("double").alias("energy_met_mu"),
+        col("item.energy_shortage_mu").cast("double").alias("energy_shortage_mu"),col("item.frequency_min_hz").cast("double").alias("frequency_min_hz"),
+        col("item.frequency_max_hz").cast("double").alias("frequency_max_hz"),col("item.frequency_avg_hz").cast("double").alias("frequency_avg_hz"),
+        col("item.source_url").cast("string").alias("source_url"))
+
+        df = df.filter(col("date").isNotNull())
+
+        df = df.dropDuplicates(["date","region","state","source_url"])
 
         df = df.withColumn("processed_timestamp",current_timestamp())
 
-        df = df.dropDuplicates(["date","region","state"])
-
-        merge_delta(spark,df,silver_path,"target.date <=> source.date AND target.region <=> source.region AND target.state <=> source.state")
+        merge_delta(spark,df,silver_path,"target.date <=> source.date AND target.region <=> source.region AND target.state <=> source.state AND target.source_url <=> source.source_url")
 
         logger.info("PSP Silver processing completed successfully.")
 
@@ -53,4 +60,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()
