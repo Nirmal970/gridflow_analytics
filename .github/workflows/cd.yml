@@ -29,8 +29,8 @@ jobs:
         run: ls -lh dist/
 
       - name: Set up Databricks CLI
-        uses: databricks/setup-cli@v0.9.0
-
+        uses: databricks/setup-cli@v1.10.0
+        
       - name: Upload wheel to Databricks Volume
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
