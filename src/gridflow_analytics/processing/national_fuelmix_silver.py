@@ -7,7 +7,8 @@ from pyspark.dbutils import DBUtils
 
 from gridflow_analytics.config.config import BRONZE_CONTAINER,STORAGE_ACCOUNT,SILVER_CONTAINER
 
-from gridflow_analytics.processing.silver_utils import read_bronze_observations,add_processed_timestamp,merge_delta
+from gridflow_analytics.common.silver_utils import read_bronze_observations,add_processed_timestamp,merge_delta
+
 
 
 def main():

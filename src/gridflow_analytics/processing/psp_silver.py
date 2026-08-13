@@ -10,6 +10,7 @@ from gridflow_analytics.config.config import BRONZE_CONTAINER,STORAGE_ACCOUNT,SI
 from gridflow_analytics.common.silver_utils import read_bronze_observations,add_processed_timestamp,merge_delta
 
 
+
 def main():
 
     spark = get_spark_session()
