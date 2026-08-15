@@ -1,4 +1,4 @@
-from pyspark.sql.functions import col,date_trunc,avg,max,min,count
+from pyspark.sql.functions import col,date_trunc,avg,max,min,count,lower,trim
 from pyspark.dbutils import DBUtils
 
 from gridflow_analytics.common.logger import logger
@@ -25,15 +25,15 @@ def main():
 
         logger.info("Starting State Weather Demand Gold processing.")
 
-        demand_df = spark.read.format("delta").load(demand_path).filter(col("source_type") == "official")
+        demand_df = spark.read.format("delta").load(demand_path).filter(col("source_type") == "official").withColumn("state_key",lower(trim(col("state"))))
 
-        weather_df = spark.read.format("delta").load(weather_path)
+        weather_df = spark.read.format("delta").load(weather_path).withColumn("state_key",lower(trim(col("state"))))
 
-        demand_hourly = demand_df.groupBy("state",date_trunc("hour",col("timestamp")).alias("hour")).agg(avg("demand_mw").alias("avg_demand_mw"),max("demand_mw").alias("peak_demand_mw"),min("demand_mw").alias("min_demand_mw"),count("*").alias("demand_observations"))
+        demand_hourly = demand_df.groupBy("state_key",date_trunc("hour",col("timestamp")).alias("hour")).agg(avg("demand_mw").alias("avg_demand_mw"),max("demand_mw").alias("peak_demand_mw"),min("demand_mw").alias("min_demand_mw"),count("*").alias("demand_observations"))
 
         weather_hourly = weather_df.groupBy("state",date_trunc("hour",col("timestamp")).alias("hour")).agg(avg("temperature").alias("temperature"),avg("apparent_temperature").alias("apparent_temperature"),avg("relative_humidity").alias("relative_humidity"),avg("dewpoint").alias("dewpoint"),avg("wind_speed").alias("wind_speed"),avg("surface_pressure").alias("surface_pressure"),avg("cloud_cover").alias("cloud_cover"),avg("precipitation").alias("precipitation"),avg("ghi").alias("ghi"),avg("direct_radiation").alias("direct_radiation"),avg("dni").alias("dni"),avg("dhi").alias("dhi"))
 
-        gold_df = demand_hourly.join(weather_hourly,["state","hour"],"inner")
+        gold_df = demand_hourly.join(weather_hourly,["state_key","hour"],"inner")
 
         gold_df = gold_df.withColumn("apparent_temperature_delta_c",col("apparent_temperature") - col("temperature"))
 
