@@ -31,7 +31,7 @@ def main():
 
         demand_hourly = demand_df.groupBy("state_key",date_trunc("hour",col("timestamp")).alias("hour")).agg(avg("demand_mw").alias("avg_demand_mw"),max("demand_mw").alias("peak_demand_mw"),min("demand_mw").alias("min_demand_mw"),count("*").alias("demand_observations"))
 
-        weather_hourly = weather_df.groupBy("state",date_trunc("hour",col("timestamp")).alias("hour")).agg(avg("temperature").alias("temperature"),avg("apparent_temperature").alias("apparent_temperature"),avg("relative_humidity").alias("relative_humidity"),avg("dewpoint").alias("dewpoint"),avg("wind_speed").alias("wind_speed"),avg("surface_pressure").alias("surface_pressure"),avg("cloud_cover").alias("cloud_cover"),avg("precipitation").alias("precipitation"),avg("ghi").alias("ghi"),avg("direct_radiation").alias("direct_radiation"),avg("dni").alias("dni"),avg("dhi").alias("dhi"))
+        weather_hourly = weather_df.groupBy("state_key",date_trunc("hour",col("timestamp")).alias("hour")).agg(avg("temperature").alias("temperature"),avg("apparent_temperature").alias("apparent_temperature"),avg("relative_humidity").alias("relative_humidity"),avg("dewpoint").alias("dewpoint"),avg("wind_speed").alias("wind_speed"),avg("surface_pressure").alias("surface_pressure"),avg("cloud_cover").alias("cloud_cover"),avg("precipitation").alias("precipitation"),avg("ghi").alias("ghi"),avg("direct_radiation").alias("direct_radiation"),avg("dni").alias("dni"),avg("dhi").alias("dhi"))
 
         gold_df = demand_hourly.join(weather_hourly,["state_key","hour"],"inner")
 
