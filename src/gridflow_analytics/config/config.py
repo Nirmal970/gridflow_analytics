@@ -17,7 +17,6 @@ ENERGYMAP_NATIONAL_DEMAND_URL = "https://api.energymap.in/api/intelligence/natio
 ENERGYMAP_NATIONAL_FUELMIX_URL = "https://api.energymap.in/api/intelligence/national-fuelmix-4min"
 ENERGYMAP_FREQUENCY_URL = "https://api.energymap.in/api/intelligence/grid-frequency"
 ENERGYMAP_WEATHER_URL = "https://api.energymap.in/api/intelligence/weather"
-ENERGYMAP_DAM_URL = "https://api.energymap.in/developer/v1/market/iex/latest"
 ENERGYMAP_PSP_URL = "https://api.energymap.in/api/intelligence/posoco-psp"
 ENERGYMAP_NATIONAL_DEMAND_HOURS = 24
 ENERGYMAP_REQUEST_TIMEOUT_SECONDS = 60
