@@ -9,7 +9,6 @@ GOLD_CONTAINER = "gold"
 BRONZE_WEATHER_PATH = "raw/weather"
 SILVER_WEATHER_PATH = "weather/current"
 GOLD_WEATHER_PATH = "weather"
-GOLD_CONTAINER = "gold"
 MODELED_SOURCE = "modeled_ml_forecast_v1"
 
 

@@ -36,6 +36,12 @@ weather-silver = "gridflow_analytics.processing.weather_silver:main"
 dam-silver = "gridflow_analytics.processing.dam_silver:main"
 psp-silver = "gridflow_analytics.processing.psp_silver:main"
 
+state-demand-gold = "gridflow_analytics.processing.state_demand_gold:main"
+national-grid-gold = "gridflow_analytics.processing.national_grid_gold:main"
+state-adequacy-gold = "gridflow_analytics.processing.state_adequacy_gold:main"
+market-gold = "gridflow_analytics.processing.market_gold:main"
+state-weather-demand-gold = "gridflow_analytics.processing.state_weather_demand_gold:main"
+
 [tool.setuptools.package-dir]
 "" = "src"
 
