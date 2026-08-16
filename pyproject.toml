@@ -15,6 +15,7 @@ authors = [
 
 dependencies = [
     "pyspark>=3.5.0",
+    "delta-spark",
     "python-dotenv",
     "requests"
 ]
