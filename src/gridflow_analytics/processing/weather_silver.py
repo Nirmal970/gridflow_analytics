@@ -27,7 +27,7 @@ def main():
 
         df = read_bronze_observations(spark,bronze_path)
 
-        df = df.select(explode_outer(col("states")).alias("state_data"))
+        df = df.select(col("state").cast("string").alias("state"),explode_outer(col("points")).alias("point"))
 
         df = df.select(col("state_data.state").cast("string").alias("state"),explode_outer(col("state_data.points")).alias("point"))
 
