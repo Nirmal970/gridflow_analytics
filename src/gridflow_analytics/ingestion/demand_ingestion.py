@@ -11,7 +11,7 @@ from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.energymap_api import get
 from gridflow_analytics.common.logger import logger
 
-from gridflow_analytics.config.config import BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_DEMAND_TIMESERIES_URL,ENERGYMAP_FETCH_HOURS,DEMAND_STATES
+from gridflow_analytics.config.config import BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_DEMAND_TIMESERIES_URL,ENERGYMAP_FETCH_HOURS,FETCH_STATES
 
 
 def fetch_demand_data(dbutils,state: str,from_timestamp: str,to_timestamp: str) -> dict:
@@ -99,7 +99,7 @@ def main():
 
         logger.info(f"Processing demand data from {from_timestamp} to {to_timestamp} with hours={hours}")
 
-        logger.info(f"Starting Demand Bronze ingestion for {len(DEMAND_STATES)} states.")
+        logger.info(f"Starting Demand Bronze ingestion for {len(FETCH_STATES)} states.")
 
         existing_states = get_existing_states(spark,bronze_path,from_timestamp,to_timestamp)
 
@@ -107,7 +107,7 @@ def main():
 
             logger.info(f"Found {len(existing_states)} existing Demand states for the requested window.")
 
-        states_to_fetch = [state for state in DEMAND_STATES if state not in existing_states]
+        states_to_fetch = [state for state in FETCH_STATES if state not in existing_states]
 
         logger.info(f"Demand states requiring ingestion: {len(states_to_fetch)}")
 

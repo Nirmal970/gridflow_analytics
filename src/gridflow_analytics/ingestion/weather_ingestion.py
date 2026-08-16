@@ -11,7 +11,7 @@ from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.energymap_api import get
 from gridflow_analytics.common.logger import logger
 
-from gridflow_analytics.config.config import BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_WEATHER_URL,ENERGYMAP_FETCH_HOURS,WEATHER_STATES
+from gridflow_analytics.config.config import BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_WEATHER_URL,ENERGYMAP_FETCH_HOURS,FETCH_STATES
 
 
 def fetch_weather_data(dbutils,state: str,hours: int) -> dict:
@@ -99,7 +99,7 @@ def main():
 
         logger.info(f"Processing weather data from {from_timestamp} to {to_timestamp} with hours={hours}")
 
-        logger.info(f"Starting Weather Bronze ingestion for {len(WEATHER_STATES)} states.")
+        logger.info(f"Starting Weather Bronze ingestion for {len(FETCH_STATES)} states.")
 
         existing_states = get_existing_states(spark,bronze_path,from_timestamp,to_timestamp)
 
@@ -107,7 +107,7 @@ def main():
 
             logger.info(f"Found {len(existing_states)} existing Weather states for the requested window.")
 
-        states_to_fetch = [state for state in WEATHER_STATES if state not in existing_states]
+        states_to_fetch = [state for state in FETCH_STATES if state not in existing_states]
 
         logger.info(f"Weather states requiring ingestion: {len(states_to_fetch)}")
 
