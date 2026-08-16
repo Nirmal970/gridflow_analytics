@@ -15,6 +15,7 @@ authors = [
 
 dependencies = [
     "pyspark>=3.5.0",
+    "delta-spark",
     "python-dotenv",
     "requests"
 ]
@@ -25,7 +26,6 @@ national-demand-ingestion = "gridflow_analytics.ingestion.national_demand_ingest
 national-fuelmix-ingestion = "gridflow_analytics.ingestion.national_fuelmix_ingestion:main"
 frequency-ingestion = "gridflow_analytics.ingestion.frequency_ingestion:main"
 weather-ingestion = "gridflow_analytics.ingestion.weather_ingestion:main"
-dam-ingestion = "gridflow_analytics.ingestion.dam_ingestion:main"
 psp-ingestion = "gridflow_analytics.ingestion.psp_ingestion:main"
 
 demand-silver = "gridflow_analytics.processing.demand_silver:main"
@@ -33,8 +33,12 @@ national-demand-silver = "gridflow_analytics.processing.national_demand_silver:m
 national-fuelmix-silver = "gridflow_analytics.processing.national_fuelmix_silver:main"
 frequency-silver = "gridflow_analytics.processing.frequency_silver:main"
 weather-silver = "gridflow_analytics.processing.weather_silver:main"
-dam-silver = "gridflow_analytics.processing.dam_silver:main"
 psp-silver = "gridflow_analytics.processing.psp_silver:main"
+
+state-demand-gold = "gridflow_analytics.processing.state_demand_gold:main"
+national-grid-gold = "gridflow_analytics.processing.national_grid_gold:main"
+state-adequacy-gold = "gridflow_analytics.processing.state_adequacy_gold:main"
+state-weather-demand-gold = "gridflow_analytics.processing.state_weather_demand_gold:main"
 
 [tool.setuptools.package-dir]
 "" = "src"

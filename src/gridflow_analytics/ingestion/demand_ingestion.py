@@ -11,73 +11,64 @@ from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.energymap_api import get
 from gridflow_analytics.common.logger import logger
 
-from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_DEMAND_TIMESERIES_URL)
+from gridflow_analytics.config.config import BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_DEMAND_TIMESERIES_URL,ENERGYMAP_FETCH_HOURS,FETCH_STATES
 
 
-def fetch_demand_data(dbutils,from_timestamp: str,to_timestamp: str) -> dict:
+def fetch_demand_data(dbutils,state: str,from_timestamp: str,to_timestamp: str) -> dict:
 
     try:
 
-        logger.info("Fetching demand timeseries data from EnergyMap. CI\CD Test")
+        logger.info(f"Fetching demand timeseries data from EnergyMap for state={state}.")
 
-        params = {"from": from_timestamp,"to": to_timestamp}
+        params = {"state":state,"from":from_timestamp,"to":to_timestamp}
 
         data = get(dbutils,ENERGYMAP_DEMAND_TIMESERIES_URL,params)
 
-        logger.info("Demand timeseries data fetched successfully from EnergyMap.")
+        logger.info(f"Demand timeseries data fetched successfully from EnergyMap for state={state}.")
 
         return data
 
     except Exception:
 
-        logger.exception("Failed while fetching demand timeseries data from EnergyMap.")
+        logger.exception(f"Failed while fetching demand timeseries data from EnergyMap for state={state}.")
 
         raise
 
 
-def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str):
+def get_existing_states(spark,bronze_path: str,from_timestamp: str,to_timestamp: str) -> set:
 
     try:
 
-        bronze_path = f"abfss://{BRONZE_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/raw/electricity/demand"
+        existing_df = spark.read.json(bronze_path)
 
-        logger.info(f"Checking existing Demand Bronze data: {bronze_path}")
+        existing_states = existing_df.filter((col("source") == "energymap") & (col("dataset") == "state_demand_timeseries") & (col("from_timestamp") == from_timestamp) & (col("to_timestamp") == to_timestamp)).select("state").distinct().collect()
 
-        try:
+        return {row["state"] for row in existing_states}
 
-            existing_df = spark.read.json(bronze_path)
+    except Exception:
 
-            existing_count = existing_df.filter((col("source") == "energymap") & (col("dataset") == "state_demand_timeseries") & (col("from_timestamp") == from_timestamp) &
-                (col("to_timestamp") == to_timestamp)).count()
+        logger.info("Bronze path does not exist. Initializing new Demand Bronze dataset.")
 
-            if existing_count > 0:
+        return set()
 
-                logger.info(f"Demand Bronze data already exists for {from_timestamp} to {to_timestamp}. Skipping ingestion.")
 
-                return
+def write_bronze(spark,data_rows: list,bronze_path: str):
 
-        except Exception:
+    if not data_rows:
 
-            logger.info("Bronze path does not exist. Initializing new Bronze dataset.")
+        logger.info("No new Demand Bronze data to write.")
 
-        raw_json = json.dumps(data)
+        return
 
-        bronze_df = spark.createDataFrame([
-            Row(
-                source="energymap",
-                dataset="state_demand_timeseries",
-                from_timestamp=from_timestamp,
-                to_timestamp=to_timestamp,
-                ingestion_timestamp=datetime.now(timezone.utc),
-                raw_response=raw_json
-            )
-        ])
+    try:
 
-        logger.info(f"Writing Demand Bronze Data: {bronze_path}")
+        bronze_df = spark.createDataFrame(data_rows)
+
+        logger.info(f"Writing {len(data_rows)} Demand Bronze records: {bronze_path}")
 
         bronze_df.write.mode("append").json(bronze_path)
 
-        logger.info("Demand Bronze layer written successfully.")
+        logger.info(f"Demand Bronze layer written successfully with {len(data_rows)} records.")
 
     except Exception:
 
@@ -88,11 +79,15 @@ def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str)
 
 def main():
 
+    hours = ENERGYMAP_FETCH_HOURS
+
     to_time = datetime.now(timezone.utc)
-    from_time = to_time - timedelta(hours=48)
+    from_time = to_time - timedelta(hours=hours)
 
     from_timestamp = from_time.isoformat().replace("+00:00","Z")
     to_timestamp = to_time.isoformat().replace("+00:00","Z")
+
+    bronze_path = f"abfss://{BRONZE_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/raw/electricity/demand"
 
     spark = get_spark_session()
 
@@ -102,13 +97,44 @@ def main():
 
         configure_adls(spark,dbutils)
 
-        logger.info(f"Processing demand data from {from_timestamp} to {to_timestamp}")
+        logger.info(f"Processing demand data from {from_timestamp} to {to_timestamp} with hours={hours}")
 
-        logger.info("Starting Demand Bronze ingestion.")
+        logger.info(f"Starting Demand Bronze ingestion for {len(FETCH_STATES)} states.")
 
-        data = fetch_demand_data(dbutils=dbutils,from_timestamp=from_timestamp,to_timestamp=to_timestamp)
+        existing_states = get_existing_states(spark,bronze_path,from_timestamp,to_timestamp)
 
-        write_bronze(spark=spark,dbutils=dbutils,data=data,from_timestamp=from_timestamp,to_timestamp=to_timestamp)
+        if existing_states:
+
+            logger.info(f"Found {len(existing_states)} existing Demand states for the requested window.")
+
+        states_to_fetch = [state for state in FETCH_STATES if state not in existing_states]
+
+        logger.info(f"Demand states requiring ingestion: {len(states_to_fetch)}")
+
+        data_rows = []
+
+        for state in states_to_fetch:
+
+            logger.info(f"Starting Demand ingestion for state={state}.")
+
+            data = fetch_demand_data(dbutils=dbutils,state=state,from_timestamp=from_timestamp,to_timestamp=to_timestamp)
+
+            raw_json = json.dumps(data)
+
+            data_rows.append(
+                Row(
+                    source="energymap",
+                    dataset="state_demand_timeseries",
+                    state=state,
+                    from_timestamp=from_timestamp,
+                    to_timestamp=to_timestamp,
+                    hours=hours,
+                    ingestion_timestamp=datetime.now(timezone.utc),
+                    raw_response=raw_json
+                )
+            )
+
+        write_bronze(spark,data_rows,bronze_path)
 
         logger.info("Demand Bronze ingestion completed successfully.")
 
