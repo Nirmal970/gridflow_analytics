@@ -20,7 +20,7 @@ def main():
         configure_adls(spark,dbutils)
 
         silver_path = f"abfss://{SILVER_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/electricity/psp"
-        gold_path = f"abfss://{GOLD_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/electricity/state_adequacy_daily"
+        gold_path = f"abfss://{GOLD_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/electricity/state_adequacy"
 
         logger.info("Starting State Adequacy Gold processing.")
 

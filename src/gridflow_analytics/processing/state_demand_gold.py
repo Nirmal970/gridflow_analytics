@@ -20,7 +20,7 @@ def main():
         configure_adls(spark,dbutils)
 
         silver_path = f"abfss://{SILVER_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/electricity/demand"
-        gold_path = f"abfss://{GOLD_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/electricity/state_demand_daily"
+        gold_path = f"abfss://{GOLD_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/electricity/state_demand"
 
         logger.info("Starting State Demand Gold processing.")
 
