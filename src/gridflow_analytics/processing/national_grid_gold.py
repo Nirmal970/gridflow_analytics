@@ -61,7 +61,7 @@ def main():
 
         gold_df = gold_df.withColumn("frequency_deviation_hz",when(col("avg_frequency_hz").isNotNull(),abs(col("avg_frequency_hz") - 50.0)))
 
-        save_gold(gold_df, gold_path, "target.date <=> source.date")
+        merge_delta(gold_df, gold_path, "target.date <=> source.date")
 
         logger.info("National Grid Gold processing completed successfully.")
 

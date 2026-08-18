@@ -43,7 +43,7 @@ def main():
 
         gold_df = gold_df.withColumn("frequency_range_hz",when(col("frequency_min_hz").isNotNull() & col("frequency_max_hz").isNotNull(),col("frequency_max_hz") - col("frequency_min_hz")))
 
-        save_gold(gold_df, gold_path, "target.date <=> source.date AND target.region <=> source.region AND target.state <=> source.state")
+        merge_delta(gold_df, gold_path, "target.date <=> source.date AND target.region <=> source.region AND target.state <=> source.state")
 
         logger.info("State Adequacy Gold processing completed successfully.")
 
