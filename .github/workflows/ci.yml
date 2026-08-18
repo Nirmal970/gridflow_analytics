@@ -1,72 +1,42 @@
-name: CI
+- name: Build wheel
+  run: python -m build --wheel
 
-on:
-  push:
-    branches:
-      - feature/project-structure
-  pull_request:
-    branches:
-      - develop
-      - main
+- name: Install wheel
+  run: python -m pip install --force-reinstall dist/*.whl
 
-jobs:
-  build-and-verify:
-    runs-on: ubuntu-latest
+- name: Verify imports
+  run: |
+    python - <<'PY'
+    import importlib
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    modules = [
+        "gridflow_analytics.ingestion.demand_ingestion",
+        "gridflow_analytics.ingestion.national_demand_ingestion",
+        "gridflow_analytics.ingestion.national_fuelmix_ingestion",
+        "gridflow_analytics.ingestion.frequency_ingestion",
+        "gridflow_analytics.ingestion.weather_ingestion",
+        "gridflow_analytics.ingestion.psp_ingestion",
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-          cache: "pip"
+        "gridflow_analytics.processing.demand_silver",
+        "gridflow_analytics.processing.national_demand_silver",
+        "gridflow_analytics.processing.national_fuelmix_silver",
+        "gridflow_analytics.processing.frequency_silver",
+        "gridflow_analytics.processing.weather_silver",
+        "gridflow_analytics.processing.psp_silver",
 
-      - name: Install build dependency
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install build
+        "gridflow_analytics.processing.state_demand_gold",
+        "gridflow_analytics.processing.national_grid_gold",
+        "gridflow_analytics.processing.state_adequacy_gold",
+        "gridflow_analytics.processing.state_weather_demand_gold",
+    ]
 
-      - name: Build wheel
-        run: python -m build --wheel
+    for module in modules:
+        print(f"Testing {module}")
+        importlib.import_module(module)
+        print(f"OK: {module}")
 
-      - name: Install wheel
-        run: python -m pip install --force-reinstall --no-deps dist/*.whl
+    print("All production imports passed.")
+    PY
 
-      - name: Verify imports
-        run: |
-          python - <<'PY'
-          import importlib
-
-          modules = [
-              "gridflow_analytics.ingestion.demand_ingestion",
-              "gridflow_analytics.ingestion.national_demand_ingestion",
-              "gridflow_analytics.ingestion.national_fuelmix_ingestion",
-              "gridflow_analytics.ingestion.frequency_ingestion",
-              "gridflow_analytics.ingestion.weather_ingestion",
-              "gridflow_analytics.ingestion.psp_ingestion",
-
-              "gridflow_analytics.processing.demand_silver",
-              "gridflow_analytics.processing.national_demand_silver",
-              "gridflow_analytics.processing.national_fuelmix_silver",
-              "gridflow_analytics.processing.frequency_silver",
-              "gridflow_analytics.processing.weather_silver",
-              "gridflow_analytics.processing.psp_silver",
-
-              "gridflow_analytics.processing.state_demand_gold",
-              "gridflow_analytics.processing.national_grid_gold",
-              "gridflow_analytics.processing.state_adequacy_gold",
-              "gridflow_analytics.processing.state_weather_demand_gold",
-          ]
-
-          for module in modules:
-              print(f"Testing {module}")
-              importlib.import_module(module)
-              print(f"OK: {module}")
-
-          print("All production imports passed.")
-          PY
-
-      - name: Compile Python source
-        run: python -m compileall -q src
+- name: Compile Python source
+  run: python -m compileall -q src
