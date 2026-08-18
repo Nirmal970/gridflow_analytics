@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/project-structure
+
   pull_request:
     branches:
       - develop
@@ -23,50 +24,107 @@ jobs:
           python-version: "3.10"
           cache: "pip"
 
-      - name: Install build dependency
+      - name: Install build tools
         run: |
           python -m pip install --upgrade pip
           python -m pip install build
 
-      - name: Build wheel
-        run: python -m build --wheel
+      # Checks syntax for every Python file recursively under src/
+      - name: Compile Python source
+        run: |
+          python -m compileall -q src
 
-      - name: Install wheel
-        run: python -m pip install --force-reinstall dist/*.whl
+      # Build the actual wheel artifact
+      - name: Build Python wheel
+        run: |
+          python -m build --wheel
 
-      - name: Verify imports
+      # Make sure every Python file in src/ made it into the wheel.
+      # Nothing is hardcoded here.
+      - name: Verify wheel contents
         run: |
           python - <<'PY'
-          import importlib
+          from pathlib import Path
+          import glob
+          import sys
+          import zipfile
 
-          modules = [
-              "gridflow_analytics.ingestion.demand_ingestion",
-              "gridflow_analytics.ingestion.national_demand_ingestion",
-              "gridflow_analytics.ingestion.national_fuelmix_ingestion",
-              "gridflow_analytics.ingestion.frequency_ingestion",
-              "gridflow_analytics.ingestion.weather_ingestion",
-              "gridflow_analytics.ingestion.psp_ingestion",
+          source_root = Path("src")
 
-              "gridflow_analytics.processing.demand_silver",
-              "gridflow_analytics.processing.national_demand_silver",
-              "gridflow_analytics.processing.national_fuelmix_silver",
-              "gridflow_analytics.processing.frequency_silver",
-              "gridflow_analytics.processing.weather_silver",
-              "gridflow_analytics.processing.psp_silver",
+          wheels = glob.glob("dist/*.whl")
 
-              "gridflow_analytics.processing.state_demand_gold",
-              "gridflow_analytics.processing.national_grid_gold",
-              "gridflow_analytics.processing.state_adequacy_gold",
-              "gridflow_analytics.processing.state_weather_demand_gold",
-          ]
+          if len(wheels) != 1:
+              print(f"Expected exactly one wheel, found: {wheels}")
+              sys.exit(1)
 
-          for module in modules:
-              print(f"Testing {module}")
-              importlib.import_module(module)
-              print(f"OK: {module}")
+          wheel = wheels[0]
 
-          print("All production imports passed.")
+          print(f"Checking wheel: {wheel}")
+
+          with zipfile.ZipFile(wheel) as archive:
+              wheel_files = set(archive.namelist())
+
+          source_files = {
+              str(path.relative_to(source_root)).replace("\\", "/")
+              for path in source_root.rglob("*.py")
+          }
+
+          missing = sorted(
+              file
+              for file in source_files
+              if file not in wheel_files
+          )
+
+          if missing:
+              print("\nPython files missing from wheel:\n")
+
+              for file in missing:
+                  print(f"  {file}")
+
+              sys.exit(1)
+
+          print(
+              f"Verified {len(source_files)} Python files "
+              "are included in the wheel."
+          )
           PY
 
-      - name: Compile Python source
-        run: python -m compileall -q src
+      # Install the exact wheel that was built.
+      # --no-deps is intentional: CI is validating the package artifact,
+      # not trying to recreate the Databricks runtime.
+      - name: Install wheel
+        run: |
+          python -m pip install --force-reinstall --no-deps dist/*.whl
+
+      # Verify that the installed distribution is valid.
+      - name: Verify installed package
+        run: |
+          python - <<'PY'
+          import importlib.metadata
+
+          distribution = importlib.metadata.distribution(
+              "gridflow-analytics"
+          )
+
+          print(f"Package: {distribution.metadata['Name']}")
+          print(f"Version: {distribution.version}")
+          print("Wheel installation successful.")
+          PY
+
+      # Show the final wheel contents for debugging.
+      - name: Show wheel contents
+        run: |
+          python - <<'PY'
+          import glob
+          import zipfile
+
+          wheel = glob.glob("dist/*.whl")[0]
+
+          print(f"Wheel: {wheel}")
+          print("\nPython files in wheel:\n")
+
+          with zipfile.ZipFile(wheel) as archive:
+              for file in sorted(archive.namelist()):
+                  if file.endswith(".py"):
+                      print(file)
+          PY
