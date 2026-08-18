@@ -29,18 +29,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install build
 
-      # Checks syntax for every Python file recursively under src/
       - name: Compile Python source
         run: |
           python -m compileall -q src
 
-      # Build the actual wheel artifact
       - name: Build Python wheel
         run: |
           python -m build --wheel
 
-      # Make sure every Python file in src/ made it into the wheel.
-      # Nothing is hardcoded here.
       - name: Verify wheel contents
         run: |
           python - <<'PY'
@@ -89,14 +85,10 @@ jobs:
           )
           PY
 
-      # Install the exact wheel that was built.
-      # --no-deps is intentional: CI is validating the package artifact,
-      # not trying to recreate the Databricks runtime.
       - name: Install wheel
         run: |
           python -m pip install --force-reinstall --no-deps dist/*.whl
 
-      # Verify that the installed distribution is valid.
       - name: Verify installed package
         run: |
           python - <<'PY'
@@ -111,7 +103,6 @@ jobs:
           print("Wheel installation successful.")
           PY
 
-      # Show the final wheel contents for debugging.
       - name: Show wheel contents
         run: |
           python - <<'PY'
