@@ -6,6 +6,7 @@ from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.silver_utils import *
 from gridflow_analytics.config.config import SILVER_CONTAINER,GOLD_CONTAINER,STORAGE_ACCOUNT
+from datetime import datetime,timezone,timedelta
 
 
 def main():
@@ -61,7 +62,7 @@ def main():
 
         gold_df = gold_df.withColumn("frequency_deviation_hz",when(col("avg_frequency_hz").isNotNull(),abs(col("avg_frequency_hz") - 50.0)))
         
-        gold_df = gold_df.withColumn("ingestion_timestamp", current_timestamp())
+        gold_df = gold_df.withColumn("ingestion_timestamp",lit(datetime.now(timezone.utc)))
 
         merge_delta(gold_df, gold_path, "target.date <=> source.date")
 

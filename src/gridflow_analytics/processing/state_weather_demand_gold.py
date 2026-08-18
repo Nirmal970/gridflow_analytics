@@ -6,6 +6,7 @@ from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.silver_utils import *
 from gridflow_analytics.config.config import SILVER_CONTAINER,GOLD_CONTAINER,STORAGE_ACCOUNT
+from datetime import datetime,timezone,timedelta
 
 
 def main():
@@ -40,7 +41,7 @@ def main():
 
         gold_df = gold_df.withColumn("apparent_temperature_delta_c",col("apparent_temperature") - col("temperature"))
         
-        gold_df = gold_df.withColumn("ingestion_timestamp", current_timestamp())
+        gold_df = gold_df.withColumn("ingestion_timestamp",lit(datetime.now(timezone.utc)))
 
         merge_delta(gold_df, gold_path, "target.state_key <=> source.state_key AND target.hour <=> source.hour")
 

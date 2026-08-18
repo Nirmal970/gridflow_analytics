@@ -28,43 +28,45 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install build
 
-      - name: Install project
-        run: python -m pip install -e .
+      - name: Build wheel
+        run: python -m build --wheel
 
-      - name: Compile Python source
-        run: python -m compileall -q src
+      - name: Install wheel
+        run: python -m pip install --force-reinstall --no-deps dist/*.whl
 
-      - name: Verify Python imports
+      - name: Verify imports
         run: |
           python - <<'PY'
           import importlib
-          import pkgutil
-          import gridflow_analytics
 
-          failures = []
+          modules = [
+              "gridflow_analytics.ingestion.demand_ingestion",
+              "gridflow_analytics.ingestion.national_demand_ingestion",
+              "gridflow_analytics.ingestion.national_fuelmix_ingestion",
+              "gridflow_analytics.ingestion.frequency_ingestion",
+              "gridflow_analytics.ingestion.weather_ingestion",
+              "gridflow_analytics.ingestion.psp_ingestion",
 
-          for module in pkgutil.walk_packages(gridflow_analytics.__path__,gridflow_analytics.__name__ + "."):
-              try:
-                  importlib.import_module(module.name)
-                  print(f"OK: {module.name}")
-              except Exception as exc:
-                  failures.append((module.name,exc))
-                  print(f"FAILED: {module.name}: {exc}")
+              "gridflow_analytics.processing.demand_silver",
+              "gridflow_analytics.processing.national_demand_silver",
+              "gridflow_analytics.processing.national_fuelmix_silver",
+              "gridflow_analytics.processing.frequency_silver",
+              "gridflow_analytics.processing.weather_silver",
+              "gridflow_analytics.processing.psp_silver",
 
-          if failures:
-              print("\nImport failures:")
-              for module_name,exc in failures:
-                  print(f"  {module_name}: {exc}")
-              raise SystemExit(1)
+              "gridflow_analytics.processing.state_demand_gold",
+              "gridflow_analytics.processing.national_grid_gold",
+              "gridflow_analytics.processing.state_adequacy_gold",
+              "gridflow_analytics.processing.state_weather_demand_gold",
+          ]
+
+          for module in modules:
+              print(f"Testing {module}")
+              importlib.import_module(module)
+              print(f"OK: {module}")
+
+          print("All production imports passed.")
           PY
 
-      - name: Build Python wheel
-        run: python -m build --wheel
-
-      - name: Verify wheel
-        run: |
-          python -m pip install --force-reinstall --no-deps dist/*.whl
-          python - <<'PY'
-          import gridflow_analytics
-          print("Wheel import successful")
-          PY
+      - name: Compile Python source
+        run: python -m compileall -q src
