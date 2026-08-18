@@ -27,7 +27,7 @@ def main():
 
         df = read_bronze_observations(spark,bronze_path,silver_path)
 
-        df = df.select(col("state").cast("string").alias("state"),explode_outer(col("points")).alias("point"))
+        df = df.select(col("ingestion_timestamp"),col("state").cast("string").alias("state"),explode_outer(col("points")).alias("point"))
 
         df = df.select(col("state"),to_timestamp(col("point.ts_utc")).alias("timestamp"),col("point.temperature_2m").cast("double").alias("temperature"),
         col("point.apparent_temperature").cast("double").alias("apparent_temperature"),col("point.relative_humidity_2m").cast("double").alias("relative_humidity"),

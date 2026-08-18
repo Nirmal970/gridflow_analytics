@@ -28,11 +28,11 @@ def main():
 
         df = read_bronze_observations(spark,bronze_path,silver_path)
         
-        df = df.select(explode_outer(col("points")).alias("point"))
+        df = df.select(col("ingestion_timestamp"),explode_outer(col("points")).alias("point"))
 
         df = df.select(to_timestamp(col("point.ts_utc")).alias("timestamp"),col("point.demand_mw").cast("double").alias("demand_mw"),col("point.source").cast("string").alias("source"),
         col("point.source_url").cast("string").alias("source_url"),col("point.is_provisional").cast("boolean").alias("is_provisional"),to_timestamp(col("point.collected_at")).alias("collected_at"),
-                    col("ingestion_timestamp"))
+        col("ingestion_timestamp"))
 
         df = df.filter(col("timestamp").isNotNull() & col("demand_mw").isNotNull())
 
