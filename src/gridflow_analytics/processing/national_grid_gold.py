@@ -4,8 +4,7 @@ from pyspark.dbutils import DBUtils
 from gridflow_analytics.common.logger import logger
 from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
-from gridflow_analytics.common.silver_utils import merge_delta
-
+from gridflow_analytics.common.gold_utils import read_silver_incremental, save_gold
 from gridflow_analytics.config.config import SILVER_CONTAINER,GOLD_CONTAINER,STORAGE_ACCOUNT
 
 
@@ -26,11 +25,15 @@ def main():
 
         logger.info("Starting National Grid Gold processing.")
 
-        demand_df = spark.read.format("delta").load(demand_path)
+        demand_df = read_silver_incremental(spark, demand_path, gold_path)
 
-        fuelmix_df = spark.read.format("delta").load(fuelmix_path)
+        fuelmix_df = read_silver_incremental(spark, fuelmix_path, gold_path)
 
-        frequency_df = spark.read.format("delta").load(frequency_path)
+        frequency_df = read_silver_incremental(spark, frequency_path, gold_path)
+
+        if demand_df.count() == 0 or fuelmix_df.count() == 0 or frequency_df.count() == 0:
+            logger.info("No new data to process. Skipping.")
+            return
 
         demand_daily = demand_df.groupBy(to_date(col("timestamp")).alias("date")).agg(avg("demand_mw").alias("avg_national_demand_mw"),\
         max("demand_mw").alias("peak_national_demand_mw"),min("demand_mw").alias("min_national_demand_mw"),count("*").alias("demand_observations"))
@@ -58,7 +61,7 @@ def main():
 
         gold_df = gold_df.withColumn("frequency_deviation_hz",when(col("avg_frequency_hz").isNotNull(),abs(col("avg_frequency_hz") - 50.0)))
 
-        merge_delta(spark,gold_df,gold_path,"target.date <=> source.date")
+        save_gold(gold_df, gold_path, "target.date <=> source.date")
 
         logger.info("National Grid Gold processing completed successfully.")
 

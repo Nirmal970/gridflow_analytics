@@ -25,7 +25,7 @@ def main():
 
         logger.info("Starting State Demand Silver processing.")
 
-        df = read_bronze_observations(spark,bronze_path)
+        df = read_bronze_observations(spark,bronze_path,silver_path)
 
         df = df.select(col("state").cast("string").alias("state"),explode_outer(col("points")).alias("point"))
 
@@ -40,7 +40,8 @@ def main():
             col("point.source_type").cast("string").alias("source_type"),
             col("point.rolling_peak_24mo_mw").cast("double").alias("rolling_peak_24mo_mw"),
             col("point.installed_in_state_mw").cast("double").alias("installed_in_state_mw"),
-            col("point.allocated_share_mw").cast("double").alias("allocated_share_mw")
+            col("point.allocated_share_mw").cast("double").alias("allocated_share_mw"),
+            col("ingestion_timestamp")
         )
 
         df = df.filter(col("timestamp").isNotNull() &col("state").isNotNull() & col("demand_mw").isNotNull() & col("source").isNotNull())

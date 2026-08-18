@@ -4,8 +4,7 @@ from pyspark.dbutils import DBUtils
 from gridflow_analytics.common.logger import logger
 from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
-from gridflow_analytics.common.silver_utils import merge_delta
-
+from gridflow_analytics.common.gold_utils import read_silver_incremental, save_gold
 from gridflow_analytics.config.config import SILVER_CONTAINER,GOLD_CONTAINER,STORAGE_ACCOUNT
 
 
@@ -24,7 +23,11 @@ def main():
 
         logger.info("Starting State Adequacy Gold processing.")
 
-        df = spark.read.format("delta").load(silver_path)
+        df = read_silver_incremental(spark, silver_path, gold_path)
+
+        if df.count() == 0:
+            logger.info("No new data to process. Skipping.")
+            return
 
         gold_df = df.groupBy("date","region","state").agg(max("peak_demand_mw").alias("peak_demand_mw"),max("peak_demand_met_mw").alias("peak_demand_met_mw"),
         max("peak_shortage_mw").alias("peak_shortage_mw"),max("energy_met_mu").alias("energy_met_mu"),max("energy_shortage_mu").alias("energy_shortage_mu"),
@@ -40,7 +43,7 @@ def main():
 
         gold_df = gold_df.withColumn("frequency_range_hz",when(col("frequency_min_hz").isNotNull() & col("frequency_max_hz").isNotNull(),col("frequency_max_hz") - col("frequency_min_hz")))
 
-        merge_delta(spark,gold_df,gold_path,"target.date <=> source.date AND target.region <=> source.region AND target.state <=> source.state")
+        save_gold(gold_df, gold_path, "target.date <=> source.date AND target.region <=> source.region AND target.state <=> source.state")
 
         logger.info("State Adequacy Gold processing completed successfully.")
 

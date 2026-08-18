@@ -40,7 +40,7 @@ def main():
         col("item.peak_shortage_mw").cast("double").alias("peak_shortage_mw"),col("item.energy_met_mu").cast("double").alias("energy_met_mu"),
         col("item.energy_shortage_mu").cast("double").alias("energy_shortage_mu"),col("item.frequency_min_hz").cast("double").alias("frequency_min_hz"),
         col("item.frequency_max_hz").cast("double").alias("frequency_max_hz"),col("item.frequency_avg_hz").cast("double").alias("frequency_avg_hz"),
-        col("item.source_url").cast("string").alias("source_url"))
+        col("item.source_url").cast("string").alias("source_url"),col("ingestion_timestamp"))
 
         df = df.filter(col("date").isNotNull())
 

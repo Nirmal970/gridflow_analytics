@@ -7,9 +7,15 @@ from pyspark.sql.types import ArrayType,StructType
 from gridflow_analytics.common.logger import logger
 
 
-def read_bronze_observations(spark,bronze_path):
+def read_bronze_observations(spark,bronze_path,silver_path=None):
 
     bronze_df = spark.read.json(bronze_path)
+    if silver_path is not None and DeltaTable.isDeltaTable(spark,silver_path):
+    silver_df = spark.read.format("delta").load(silver_path)
+    if "ingestion_timestamp" in silver_df.columns:
+        max_ingestion = silver_df.selectExpr("max(ingestion_timestamp) as max_ingestion").first()["max_ingestion"]
+        if max_ingestion is not None:
+            bronze_df = bronze_df.filter(col("ingestion_timestamp") > lit(max_ingestion))
 
     if "raw_response" not in bronze_df.columns:
 
