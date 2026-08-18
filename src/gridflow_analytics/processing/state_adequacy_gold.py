@@ -42,6 +42,8 @@ def main():
         col("energy_shortage_mu") / (col("energy_met_mu") + col("energy_shortage_mu")) * 100))
 
         gold_df = gold_df.withColumn("frequency_range_hz",when(col("frequency_min_hz").isNotNull() & col("frequency_max_hz").isNotNull(),col("frequency_max_hz") - col("frequency_min_hz")))
+        
+        gold_df = gold_df.withColumn("ingestion_timestamp", current_timestamp())
 
         merge_delta(gold_df, gold_path, "target.date <=> source.date AND target.region <=> source.region AND target.state <=> source.state")
 

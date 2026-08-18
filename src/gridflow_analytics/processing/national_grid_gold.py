@@ -60,6 +60,8 @@ def main():
         gold_df = demand_daily.join(frequency_daily,["date"],"left").join(fuel_pivot,["date"],"left")
 
         gold_df = gold_df.withColumn("frequency_deviation_hz",when(col("avg_frequency_hz").isNotNull(),abs(col("avg_frequency_hz") - 50.0)))
+        
+        gold_df = gold_df.withColumn("ingestion_timestamp", current_timestamp())
 
         merge_delta(gold_df, gold_path, "target.date <=> source.date")
 

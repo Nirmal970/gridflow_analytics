@@ -39,6 +39,8 @@ def main():
         gold_df = demand_hourly.join(weather_hourly,["state_key","hour"],"inner")
 
         gold_df = gold_df.withColumn("apparent_temperature_delta_c",col("apparent_temperature") - col("temperature"))
+        
+        gold_df = gold_df.withColumn("ingestion_timestamp", current_timestamp())
 
         merge_delta(gold_df, gold_path, "target.state_key <=> source.state_key AND target.hour <=> source.hour")
 
