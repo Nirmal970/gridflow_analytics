@@ -40,7 +40,7 @@ def main():
 
         gold_df = gold_df.withColumn("apparent_temperature_delta_c",col("apparent_temperature") - col("temperature"))
 
-        save_gold(gold_df, gold_path, "target.state_key <=> source.state_key AND target.hour <=> source.hour")
+        merge_delta(gold_df, gold_path, "target.state_key <=> source.state_key AND target.hour <=> source.hour")
 
         logger.info("State Weather Demand Gold processing completed successfully.")
 
