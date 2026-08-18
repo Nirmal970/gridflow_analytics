@@ -46,7 +46,7 @@ def main():
         
         gold_df = gold_df.withColumn("ingestion_timestamp",lit(datetime.now(timezone.utc)))
 
-        merge_delta(gold_df, gold_path, "target.date <=> source.date AND target.region <=> source.region AND target.state <=> source.state")
+        merge_delta(spark,gold_df, gold_path, "target.date <=> source.date AND target.region <=> source.region AND target.state <=> source.state")
 
         logger.info("State Adequacy Gold processing completed successfully.")
 
