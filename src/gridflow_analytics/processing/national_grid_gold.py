@@ -64,7 +64,7 @@ def main():
         
         gold_df = gold_df.withColumn("ingestion_timestamp",lit(datetime.now(timezone.utc)))
 
-        merge_delta(gold_df, gold_path, "target.date <=> source.date")
+        merge_delta(spark,gold_df, gold_path, "target.date <=> source.date")
 
         logger.info("National Grid Gold processing completed successfully.")
 
