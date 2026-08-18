@@ -29,6 +29,8 @@ def main():
         if df.count() == 0:
             logger.info("No new data to process. Skipping.")
             return
+        
+        max_silver_ingestion = df.select(max("ingestion_timestamp")).first()[0]
 
         gold_df = df.groupBy("date","region","state").agg(max("peak_demand_mw").alias("peak_demand_mw"),max("peak_demand_met_mw").alias("peak_demand_met_mw"),
         max("peak_shortage_mw").alias("peak_shortage_mw"),max("energy_met_mu").alias("energy_met_mu"),max("energy_shortage_mu").alias("energy_shortage_mu"),
@@ -44,7 +46,7 @@ def main():
 
         gold_df = gold_df.withColumn("frequency_range_hz",when(col("frequency_min_hz").isNotNull() & col("frequency_max_hz").isNotNull(),col("frequency_max_hz") - col("frequency_min_hz")))
         
-        gold_df = gold_df.withColumn("ingestion_timestamp",lit(datetime.now(timezone.utc)))
+        gold_df = gold_df.withColumn("ingestion_timestamp",lit(max_silver_ingestion))
 
         merge_delta(spark,gold_df, gold_path, "target.date <=> source.date AND target.region <=> source.region AND target.state <=> source.state")
 

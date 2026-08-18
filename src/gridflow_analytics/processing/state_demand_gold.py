@@ -29,6 +29,8 @@ def main():
         if df.count() == 0:
             logger.info("No new data to process. Skipping.")
             return
+            
+        max_silver_ingestion = df.select(max("ingestion_timestamp")).first()[0]
 
         df = df.withColumn("date",to_date(col("timestamp")))
 
@@ -38,7 +40,7 @@ def main():
         count(when(col("source_type") == "official",True)).alias("official_observations"),count(when(col("source_type") == "modeled",True)).alias("modeled_observations"),
         max("installed_in_state_mw").alias("installed_in_state_mw"),max("allocated_share_mw").alias("allocated_share_mw"),max("rolling_peak_24mo_mw").alias("rolling_peak_24mo_mw"))
         
-        gold_df = gold_df.withColumn("ingestion_timestamp",lit(datetime.now(timezone.utc)))
+        gold_df = gold_df.withColumn("ingestion_timestamp",lit(max_silver_ingestion))
 
         merge_delta(spark,gold_df, gold_path, "target.state <=> source.state AND target.region <=> source.region AND target.date <=> source.date")
 

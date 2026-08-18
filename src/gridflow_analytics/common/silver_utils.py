@@ -103,13 +103,13 @@ def merge_delta(spark,df,silver_path,merge_condition):
         
         
 
-def get_max_ingestion_timestamp(spark, gold_path):
+def get_max_ingestion_timestamp(spark,gold_path):
     try:
         gold_df = spark.read.format("delta").load(gold_path)
-        max_ts = gold_df.select(spark_max("ingestion_timestamp")).collect()[0][0]
-        return True, max_ts
+        max_date = gold_df.select(spark_max("date")).collect()[0][0]
+        return True,max_date - timedelta(days=2)
     except:
-        return False, None
+        return False,None
 
 
 def read_silver_incremental(spark, silver_path, gold_path, filters=None, transform=None):

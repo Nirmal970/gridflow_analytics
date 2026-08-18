@@ -32,6 +32,8 @@ def main():
         if demand_df.count() == 0 or weather_df.count() == 0:
             logger.info("No new data to process. Skipping.")
             return
+            
+        max_silver_ingestion = df.select(max("ingestion_timestamp")).first()[0]
 
         demand_hourly = demand_df.groupBy("state_key",date_trunc("hour",col("timestamp")).alias("hour")).agg(avg("demand_mw").alias("avg_demand_mw"),max("demand_mw").alias("peak_demand_mw"),min("demand_mw").alias("min_demand_mw"),count("*").alias("demand_observations"))
 
@@ -41,7 +43,7 @@ def main():
 
         gold_df = gold_df.withColumn("apparent_temperature_delta_c",col("apparent_temperature") - col("temperature"))
         
-        gold_df = gold_df.withColumn("ingestion_timestamp",lit(datetime.now(timezone.utc)))
+        gold_df = gold_df.withColumn("ingestion_timestamp",lit(max_silver_ingestion))
 
         merge_delta(spark,gold_df, gold_path, "target.state_key <=> source.state_key AND target.hour <=> source.hour")
 
