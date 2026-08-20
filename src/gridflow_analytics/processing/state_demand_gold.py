@@ -30,7 +30,7 @@ def main():
             logger.info("No new data to process. Skipping.")
             return
             
-        max_silver_ingestion = df.select(max("ingestion_timestamp")).first()[0]
+        max_silver_ingestion = max(demand_df.select(max("ingestion_timestamp")).first()[0], weather_df.select(max("ingestion_timestamp")).first()[0])
 
         df = df.withColumn("date",to_date(col("timestamp")))
 
