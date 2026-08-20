@@ -36,11 +36,11 @@ def main():
             logger.info("No new data to process. Skipping.")
             return
         
-        demand_max = demand_df.select(max("ingestion_timestamp")).first()[0]
-        fuelmix_max = fuelmix_df.select(max("ingestion_timestamp")).first()[0]
-        frequency_max = frequency_df.select(max("ingestion_timestamp")).first()[0]
+        demand_max = demand_df.select(max("ingestion_timestamp").cast("timestamp")).first()[0]
+        fuelmix_max = fuelmix_df.select(max("ingestion_timestamp").cast("timestamp")).first()[0]
+        frequency_max = frequency_df.select(max("ingestion_timestamp").cast("timestamp")).first()[0]
 
-        max_silver_ingestion = max(demand_max,fuelmix_max,frequency_max)
+        max_silver_ingestion = sorted([demand_max, fuelmix_max, frequency_max])[-1]
         
 
         demand_daily = demand_df.groupBy(to_date(col("timestamp")).alias("date")).agg(avg("demand_mw").alias("avg_national_demand_mw"),\
