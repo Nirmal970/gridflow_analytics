@@ -33,7 +33,7 @@ def main():
             logger.info("No new data to process. Skipping.")
             return
             
-        max_silver_ingestion = max(demand_df.select(max("ingestion_timestamp")).first()[0], weather_df.select(max("ingestion_timestamp")).first()[0])
+        max_silver_ingestion = sorted([demand_df.select(max("ingestion_timestamp").cast("timestamp")).first()[0], weather_df.select(max("ingestion_timestamp").cast("timestamp")).first()[0]])[-1]
 
         demand_hourly = demand_df.groupBy("state_key",date_trunc("hour",col("timestamp")).alias("hour")).agg(avg("demand_mw").alias("avg_demand_mw"),max("demand_mw").alias("peak_demand_mw"),min("demand_mw").alias("min_demand_mw"),count("*").alias("demand_observations"))
 
