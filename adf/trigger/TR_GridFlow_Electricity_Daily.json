@@ -1,0 +1,26 @@
+{
+	"name": "TR_GridFlow_Electricity_Daily",
+	"properties": {
+		"description": "Daily trigger for gridflow electricity",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2026-08-10T07:36:00",
+				"timeZone": "India Standard Time",
+				"schedule": {
+					"minutes": [
+						21
+					],
+					"hours": [
+						13
+					]
+				}
+			}
+		}
+	}
+}

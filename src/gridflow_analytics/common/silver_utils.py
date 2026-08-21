@@ -7,9 +7,16 @@ from pyspark.sql.types import ArrayType,StructType
 from gridflow_analytics.common.logger import logger
 
 
-def read_bronze_observations(spark,bronze_path):
+def read_bronze_observations(spark,bronze_path,silver_path=None):
 
     bronze_df = spark.read.json(bronze_path)
+    if silver_path is not None and DeltaTable.isDeltaTable(spark,silver_path):
+        silver_df = spark.read.format("delta").load(silver_path)
+        
+        if "ingestion_timestamp" in silver_df.columns:
+            max_ingestion = silver_df.selectExpr("max(ingestion_timestamp) as max_ingestion").first()["max_ingestion"]
+            if max_ingestion is not None:
+                bronze_df = bronze_df.filter(col("ingestion_timestamp") > lit(max_ingestion))
 
     if "raw_response" not in bronze_df.columns:
 
@@ -93,3 +100,29 @@ def merge_delta(spark,df,silver_path,merge_condition):
     else:
 
         df.write.format("delta").mode("overwrite").save(silver_path)
+        
+        
+
+def get_max_ingestion_timestamp(spark,gold_path):
+    try:
+        gold_df = spark.read.format("delta").load(gold_path)
+        max_date = gold_df.select(spark_max("date")).collect()[0][0]
+        return True,max_date - timedelta(days=2)
+    except:
+        return False,None
+
+
+def read_silver_incremental(spark, silver_path, gold_path, filters=None, transform=None):
+    gold_exists, max_ts = get_max_ingestion_timestamp(spark, gold_path)
+    df = spark.read.format("delta").load(silver_path)
+    if filters:
+        for f in filters:
+            df = df.filter(f)
+    if gold_exists and max_ts is not None:
+        logger.info(f"Reading data with ingestion_timestamp > {max_ts}")
+        df = df.filter(col("ingestion_timestamp") > max_ts)
+    else:
+        logger.info("Reading all data (first run)")
+    if transform:
+        df = transform(df)
+    return df

@@ -1,0 +1,84 @@
+{
+	"name": "PL_GridFlow_Pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "Run Gridflow Bronze",
+				"type": "DatabricksJob",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"jobId": "1042361047452094"
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_databricks_gridflow_dev",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Run Gridflow Silver",
+				"type": "DatabricksJob",
+				"dependsOn": [
+					{
+						"activity": "Run Gridflow Bronze",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"jobId": "251621724743679"
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_databricks_gridflow_dev",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Run Gridflow Gold",
+				"type": "DatabricksJob",
+				"dependsOn": [
+					{
+						"activity": "Run Gridflow Silver",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"jobId": "1032881776251501"
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_databricks_gridflow_dev",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-08-15T07:01:47Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

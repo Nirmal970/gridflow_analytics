@@ -25,12 +25,13 @@ def main():
 
         logger.info("Starting Frequency Silver processing.")
 
-        df = read_bronze_observations(spark,bronze_path)
+        df = read_bronze_observations(spark,bronze_path,silver_path)
 
         df = df.select(
             to_timestamp(col("timestamp")).alias("timestamp"),
             col("frequency_hz").cast("double").alias("frequency_hz"),
-            col("region").cast("string").alias("region")
+            col("region").cast("string").alias("region"),
+            col("ingestion_timestamp")
         )
 
         df = df.filter(col("timestamp").isNotNull() & col("frequency_hz").isNotNull())

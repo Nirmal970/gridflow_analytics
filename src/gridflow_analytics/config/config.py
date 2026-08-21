@@ -25,7 +25,7 @@ ENERGYMAP_API_KEY_SECRET = "energymap-api-key"
 
 
 
-ENERGYMAP_FETCH_HOURS = 1440
+ENERGYMAP_FETCH_HOURS = 48
 
 FETCH_STATES = ["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh",
 "Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal",
