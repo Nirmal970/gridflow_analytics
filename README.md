@@ -12,28 +12,13 @@ The project is designed to demonstrate practical Data Engineering skills using A
 
 ## Architecture
 
-```text
-EnergyMap APIs
-      |
-      v
-Azure Data Factory
-      |
-      v
-Databricks
-      |
-      +-------------------+
-      |                   |
-      v                   v
-   Bronze              Silver
-   Raw Data        Cleaned / Delta
-                          |
-                          v
-                        Gold
-                   Curated / Delta
-                          |
-                          v
-                      Power BI
-```
+The GridFlow Analytics platform follows a simple Azure-based data engineering architecture:
+
+EnergyMap APIs → Azure Data Factory → Databricks Bronze → Silver → Gold → Power BI
+
+<p align="center">
+  <img src="architecture/diagrams/Architecture_Diagram.png" alt="GridFlow Analytics Architecture" width="900">
+</p>
 
 Azure Data Factory is responsible for orchestration, dependencies, scheduling, monitoring, and reprocessing.
 
@@ -234,6 +219,20 @@ The project follows the principle of keeping credentials outside application sou
 ## Power BI
 
 The final Power BI report contains two main pages.
+
+## Power BI Dashboard
+
+### Grid Overview
+
+<p align="center">
+  <img src="dashboard/Dashboard1.png" alt="Grid Overview Dashboard" width="900">
+</p>
+
+### State & Adequacy
+
+<p align="center">
+  <img src="dashboard/Dashboard2.png" alt="State and Adequacy Dashboard" width="900">
+</p>
 
 ### Grid Overview
 
