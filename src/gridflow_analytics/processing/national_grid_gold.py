@@ -4,9 +4,9 @@ from pyspark.dbutils import DBUtils
 from gridflow_analytics.common.logger import logger
 from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
-from gridflow_analytics.common.silver_utils import merge_delta
-
+from gridflow_analytics.common.silver_utils import *
 from gridflow_analytics.config.config import SILVER_CONTAINER,GOLD_CONTAINER,STORAGE_ACCOUNT
+from datetime import datetime,timezone,timedelta
 
 
 def main():
@@ -22,15 +22,26 @@ def main():
         demand_path = f"abfss://{SILVER_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/electricity/national_demand"
         fuelmix_path = f"abfss://{SILVER_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/electricity/national_fuelmix"
         frequency_path = f"abfss://{SILVER_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/electricity/frequency"
-        gold_path = f"abfss://{GOLD_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/electricity/national_grid_daily"
+        gold_path = f"abfss://{GOLD_CONTAINER}@{STORAGE_ACCOUNT}.dfs.core.windows.net/electricity/national_grid"
 
         logger.info("Starting National Grid Gold processing.")
 
-        demand_df = spark.read.format("delta").load(demand_path)
+        demand_df = read_silver_incremental(spark, demand_path, gold_path)
 
-        fuelmix_df = spark.read.format("delta").load(fuelmix_path)
+        fuelmix_df = read_silver_incremental(spark, fuelmix_path, gold_path)
 
-        frequency_df = spark.read.format("delta").load(frequency_path)
+        frequency_df = read_silver_incremental(spark, frequency_path, gold_path)
+
+        if demand_df.count() == 0 or fuelmix_df.count() == 0 or frequency_df.count() == 0:
+            logger.info("No new data to process. Skipping.")
+            return
+        
+        demand_max = demand_df.select(max("ingestion_timestamp").cast("timestamp")).first()[0]
+        fuelmix_max = fuelmix_df.select(max("ingestion_timestamp").cast("timestamp")).first()[0]
+        frequency_max = frequency_df.select(max("ingestion_timestamp").cast("timestamp")).first()[0]
+
+        max_silver_ingestion = sorted([demand_max, fuelmix_max, frequency_max])[-1]
+        
 
         demand_daily = demand_df.groupBy(to_date(col("timestamp")).alias("date")).agg(avg("demand_mw").alias("avg_national_demand_mw"),\
         max("demand_mw").alias("peak_national_demand_mw"),min("demand_mw").alias("min_national_demand_mw"),count("*").alias("demand_observations"))
@@ -57,8 +68,10 @@ def main():
         gold_df = demand_daily.join(frequency_daily,["date"],"left").join(fuel_pivot,["date"],"left")
 
         gold_df = gold_df.withColumn("frequency_deviation_hz",when(col("avg_frequency_hz").isNotNull(),abs(col("avg_frequency_hz") - 50.0)))
+        
+        gold_df = gold_df.withColumn("ingestion_timestamp",lit(max_silver_ingestion))
 
-        merge_delta(spark,gold_df,gold_path,"target.date <=> source.date")
+        merge_delta(spark,gold_df, gold_path, "target.date <=> source.date")
 
         logger.info("National Grid Gold processing completed successfully.")
 

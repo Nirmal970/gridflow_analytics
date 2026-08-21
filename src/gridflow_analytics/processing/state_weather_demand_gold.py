@@ -4,9 +4,9 @@ from pyspark.dbutils import DBUtils
 from gridflow_analytics.common.logger import logger
 from gridflow_analytics.common.spark_session import get_spark_session
 from gridflow_analytics.common.adls_auth import configure_adls
-from gridflow_analytics.common.silver_utils import merge_delta
-
+from gridflow_analytics.common.silver_utils import *
 from gridflow_analytics.config.config import SILVER_CONTAINER,GOLD_CONTAINER,STORAGE_ACCOUNT
+from datetime import datetime,timezone,timedelta
 
 
 def main():
@@ -25,9 +25,15 @@ def main():
 
         logger.info("Starting State Weather Demand Gold processing.")
 
-        demand_df = spark.read.format("delta").load(demand_path).filter(col("source_type") == "official").withColumn("state_key",lower(trim(col("state"))))
+        demand_df = read_silver_incremental(spark, demand_path, gold_path, filters=[col("source_type") == "official"], transform=lambda df: df.withColumn("state_key",lower(trim(col("state")))))
 
-        weather_df = spark.read.format("delta").load(weather_path).withColumn("state_key",lower(trim(col("state"))))
+        weather_df = read_silver_incremental(spark, weather_path, gold_path, transform=lambda df: df.withColumn("state_key",lower(trim(col("state")))))
+
+        if demand_df.count() == 0 or weather_df.count() == 0:
+            logger.info("No new data to process. Skipping.")
+            return
+            
+        max_silver_ingestion = sorted([demand_df.select(max("ingestion_timestamp").cast("timestamp")).first()[0], weather_df.select(max("ingestion_timestamp").cast("timestamp")).first()[0]])[-1]
 
         demand_hourly = demand_df.groupBy("state_key",date_trunc("hour",col("timestamp")).alias("hour")).agg(avg("demand_mw").alias("avg_demand_mw"),max("demand_mw").alias("peak_demand_mw"),min("demand_mw").alias("min_demand_mw"),count("*").alias("demand_observations"))
 
@@ -36,8 +42,10 @@ def main():
         gold_df = demand_hourly.join(weather_hourly,["state_key","hour"],"inner")
 
         gold_df = gold_df.withColumn("apparent_temperature_delta_c",col("apparent_temperature") - col("temperature"))
+        
+        gold_df = gold_df.withColumn("ingestion_timestamp",lit(max_silver_ingestion))
 
-        merge_delta(spark,gold_df,gold_path,"target.state <=> source.state AND target.hour <=> source.hour")
+        merge_delta(spark,gold_df, gold_path, "target.state_key <=> source.state_key AND target.hour <=> source.hour")
 
         logger.info("State Weather Demand Gold processing completed successfully.")
 

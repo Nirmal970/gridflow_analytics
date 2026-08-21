@@ -11,7 +11,7 @@ from gridflow_analytics.common.adls_auth import configure_adls
 from gridflow_analytics.common.energymap_api import get
 from gridflow_analytics.common.logger import logger
 
-from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_FREQUENCY_URL)
+from gridflow_analytics.config.config import (BRONZE_CONTAINER,STORAGE_ACCOUNT,ENERGYMAP_FREQUENCY_URL,ENERGYMAP_FETCH_HOURS)
 
 
 def fetch_frequency_data(dbutils,hours: int) -> dict:
@@ -88,10 +88,9 @@ def write_bronze(spark,dbutils,data: dict,from_timestamp: str,to_timestamp: str,
 
 def main():
 
-    hours = 48
 
     to_time = datetime.now(timezone.utc)
-    from_time = to_time - timedelta(hours=hours)
+    from_time = to_time - timedelta(hours=ENERGYMAP_FETCH_HOURS)
 
     from_timestamp = from_time.isoformat().replace("+00:00","Z")
     to_timestamp = to_time.isoformat().replace("+00:00","Z")
@@ -108,9 +107,9 @@ def main():
 
         logger.info("Starting Frequency Bronze ingestion.")
 
-        data = fetch_frequency_data(dbutils=dbutils,hours=hours)
+        data = fetch_frequency_data(dbutils=dbutils,hours=ENERGYMAP_FETCH_HOURS)
 
-        write_bronze(spark=spark,dbutils=dbutils,data=data,from_timestamp=from_timestamp,to_timestamp=to_timestamp,hours=hours)
+        write_bronze(spark=spark,dbutils=dbutils,data=data,from_timestamp=from_timestamp,to_timestamp=to_timestamp,hours=ENERGYMAP_FETCH_HOURS)
 
         logger.info("Frequency Bronze ingestion completed successfully.")
 

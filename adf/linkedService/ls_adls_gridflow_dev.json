@@ -1,0 +1,12 @@
+{
+	"name": "ls_adls_gridflow_dev",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": "linked service for data lake storage for grodflow project for dev env",
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://gridflowstoragedev.dfs.core.windows.net/"
+		}
+	}
+}

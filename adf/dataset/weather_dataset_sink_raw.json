@@ -1,0 +1,35 @@
+{
+	"name": "weather_dataset_sink_raw",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_gridflow_dev",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"file_name": {
+				"type": "string"
+			},
+			"folder_path": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().file_name",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().folder_path",
+					"type": "Expression"
+				},
+				"fileSystem": "bronze"
+			}
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
