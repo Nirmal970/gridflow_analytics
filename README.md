@@ -400,4 +400,8 @@ Power BI
 The result is a structured electricity analytics platform that combines multiple grid-related data domains into curated datasets for business analysis using publicly available API's as source.
 
 
-The architecture is designed to remain understandable, maintainable, and explainable in a Data Engineering interview.
+## Documentation
+
+For more information about the project architecture, data pipeline, and implementation details, refer to the technical documentation stored in:
+
+`docs/Technical_Documentation.pdf`
