@@ -1,0 +1,15 @@
+{
+	"name": "adf-gridflow-dev",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "centralindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "08bf3ecc-8d6d-4990-925b-e89729ffb3d4",
+		"tenantId": "026542c8-9c77-451b-9825-a5a18a4cf523"
+	}
+}
