@@ -402,6 +402,6 @@ The result is a structured electricity analytics platform that combines multiple
 
 ## Documentation
 
-For more information about the project architecture, data pipeline, engineering decisions, and implementation details, refer to the technical documentation stored in:
+For more information about the project architecture, data pipeline, and implementation details, refer to the technical documentation stored in:
 
 `docs/Technical_Documentation.pdf`
