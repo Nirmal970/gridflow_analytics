@@ -3,7 +3,8 @@ name: CI
 on:
   push:
     branches:
-      - feature/project-structure
+      - develop
+      - main
 
   pull_request:
     branches:
