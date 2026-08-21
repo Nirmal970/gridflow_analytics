@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "gridflow-analytics"
 version = "0.1.0"
-description = "Electricity Analytics Platform built using Azure, Databricks and Spark."
+description = "Gridflow project"
 readme = "README.md"
 requires-python = ">=3.10"
 
